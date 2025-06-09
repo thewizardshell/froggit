@@ -130,6 +130,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			} else if m.CurrentView == BranchView && len(m.Branches) > 0 {
+				if m.Cursor >= len(m.Branches) {
+					m.Cursor = len(m.Branches) - 1
+					return m, nil
+				}
 				selectedBranch := m.Branches[m.Cursor]
 				if selectedBranch != m.CurrentBranch {
 					err := git.Checkout(selectedBranch)
@@ -190,7 +194,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.NewBranchName = ""
 					return m, nil
 				case "d":
-					if m.Cursor < len(m.Branches) {
+					if len(m.Branches) > 0 && m.Cursor < len(m.Branches) {
 						branchToDelete := m.Branches[m.Cursor]
 						if branchToDelete == m.CurrentBranch {
 							m.Message = "✗ No puedes eliminar la rama actual"

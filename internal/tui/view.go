@@ -183,7 +183,7 @@ func (m Model) renderRemoteView() string {
 		for i, remote := range m.Remotes {
 			cursor := " "
 			if m.Cursor == i {
-				cursor = "▶"
+				cursor = "▶ "
 			}
 
 			style := NormalStyle

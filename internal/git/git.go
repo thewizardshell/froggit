@@ -56,16 +56,25 @@ func GetModifiedFiles() ([]FileItem, error) {
 	if len(output) > 0 {
 		lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 		for _, line := range lines {
-			if line != "" && len(line) >= 3 {
-				status := strings.TrimSpace(line[:2])
-				filename := line[3:]
-
-				files = append(files, FileItem{
-					Name:   filename,
-					Status: status,
-					Staged: stagedFiles[filename],
-				})
+			if len(line) < 4 {
+				continue
 			}
+
+			// status puede estar en la primera o segunda columna
+			status := strings.TrimSpace(line[:2])
+			filename := strings.TrimSpace(line[3:])
+
+			// Algunos nombres de archivo pueden contener espacios. Usa Fields para mayor precisión.
+			// Nota: git status --porcelain v1 separa status y nombre con exactamente dos caracteres.
+			if fields := strings.Fields(line); len(fields) >= 2 {
+				filename = strings.Join(fields[1:], " ")
+			}
+
+			files = append(files, FileItem{
+				Name:   filename,
+				Status: status,
+				Staged: stagedFiles[filename],
+			})
 		}
 	}
 
@@ -180,8 +189,31 @@ func Pull() error {
 	if err != nil {
 		return fmt.Errorf("error al hacer pull: %v - %s", err, string(output))
 	}
-	if strings.Contains(string(output), "Already up to date") {
-		return fmt.Errorf("el repositorio ya está actualizado")
-	}
 	return nil
+}
+
+// CreateBranch crea una nueva rama
+func CreateBranch(name string) error {
+	cmd := exec.Command("git", "checkout", "-b", name)
+	return cmd.Run()
+}
+
+// DeleteBranch elimina una rama
+func DeleteBranch(name string) error {
+	cmd := exec.Command("git", "branch", "-d", name)
+	return cmd.Run()
+}
+
+// DiscardChanges descarta los cambios de un archivo
+func DiscardChanges(filename string) error {
+	// Primero verificamos si el archivo está siendo rastreado
+	cmd := exec.Command("git", "ls-files", filename)
+	if err := cmd.Run(); err != nil {
+		// Si el archivo no está siendo rastreado, lo eliminamos directamente
+		cmd = exec.Command("rm", filename)
+		return cmd.Run()
+	}
+	// Si el archivo está siendo rastreado, usamos checkout
+	cmd = exec.Command("git", "checkout", "--", filename)
+	return cmd.Run()
 }
