@@ -9,26 +9,17 @@ func (m Model) View() string {
 	var s strings.Builder
 
 	asciiTitle := `
-                   ___           ___           ___           ___                                
-     ___          /  /\         /  /\         /  /\         /  /\           ___         ___     
-    /  /\        /  /::\       /  /::\       /  /::\       /  /::\         /__/\       /__/\    
-   /  /::\      /  /:/\:\     /  /:/\:\     /  /:/\:\     /  /:/\:\        \__\:\      \  \:\   
-  /  /:/\:\    /  /::\ \:\   /  /:/  \:\   /  /:/  \:\   /  /:/  \:\       /  /::\      \__\:\  
- /  /::\ \:\  /__/:/\:\_\:\ /__/:/ \__\:\ /__/:/_\_ \:\ /__/:/_\_ \:\   __/  /:/\/      /  /::\ 
-/__/:/\:\ \:\ \__\/~|::\/:/ \  \:\ /  /:/ \  \:\__/\_\/ \  \:\__/\_\/  /__/\/:/~~      /  /:/\:\
-\__\/  \:\_\/    |  |:|::/   \  \:\  /:/   \  \:\ \:\    \  \:\ \:\    \  \::/        /  /:/__\/
-     \  \:\      |  |:|\/     \  \:\/:/     \  \:\/:/     \  \:\/:/     \  \:\       /__/:/     
-      \__\/      |__|:|~       \  \::/       \  \::/       \  \::/       \__\/       \__\/      
-                  \__\|         \__\/         \__\/         \__\/                               
-			    @thewizardshell - jun 2025 - version beta 0.0.1 - in development
+█████████████╗ ██████╗ ██████╗ ██████╗██████████╗
+██╔════██╔══████╔═══████╔════╝██╔════╝██╚══██╔══╝
+█████╗ ██████╔██║   ████║  █████║  █████║  ██║   
+██╔══╝ ██╔══████║   ████║   ████║   ████║  ██║   
+██║    ██║  ██╚██████╔╚██████╔╚██████╔██║  ██║   
+╚═╝    ╚═╝  ╚═╝╚═════╝ ╚═════╝ ╚═════╝╚═╝  ╚═╝  𓆏  
 `
-	// Título principal con ASCII art usando tu TitleStyle
+
 	s.WriteString(TitleStyle.Render(asciiTitle) + "\n\n")
+	s.WriteString(fmt.Sprintf(" current branch: %s\n\n", HeaderStyle.Render(m.CurrentBranch)))
 
-	// Información de la rama actual
-	s.WriteString(fmt.Sprintf("current branch: %s\n\n", HeaderStyle.Render(m.CurrentBranch)))
-
-	// Renderizar vista actual
 	switch m.CurrentView {
 	case FileView:
 		s.WriteString(m.renderFileView())
@@ -46,7 +37,6 @@ func (m Model) View() string {
 		s.WriteString(m.renderConfirmDialog())
 	}
 
-	// Mensaje de estado
 	if m.Message != "" {
 		s.WriteString("\n")
 		switch m.MessageType {
@@ -59,12 +49,11 @@ func (m Model) View() string {
 		}
 	}
 
-	// Agregar indicadores de estado para fetch y pull
 	if m.IsFetching {
-		s.WriteString("\n" + SpinnerStyle.Render(fmt.Sprintf("%s Fetching...", m.SpinnerFrames[m.SpinnerIndex])))
+		s.WriteString("\n" + SpinnerStyle.Render(fmt.Sprintf(" Fetching... %s", m.SpinnerFrames[m.SpinnerIndex])))
 	}
 	if m.IsPulling {
-		s.WriteString("\n" + SpinnerStyle.Render(fmt.Sprintf("%s Pulling...", m.SpinnerFrames[m.SpinnerIndex])))
+		s.WriteString("\n" + SpinnerStyle.Render(fmt.Sprintf(" Pulling... %s", m.SpinnerFrames[m.SpinnerIndex])))
 	}
 
 	return s.String()
@@ -73,7 +62,6 @@ func (m Model) View() string {
 func (m Model) renderFileView() string {
 	var s strings.Builder
 
-	// Añadir resumen del estado
 	stagedCount := 0
 	unstagedCount := 0
 	for _, file := range m.Files {
@@ -84,20 +72,19 @@ func (m Model) renderFileView() string {
 		}
 	}
 
-	s.WriteString(HeaderStyle.Render("Git Status:") + "\n")
-	s.WriteString(fmt.Sprintf("📦 Stage: %d archivos\n", stagedCount))
-	s.WriteString(fmt.Sprintf("📝 Sin staging: %d archivos\n", unstagedCount))
+	s.WriteString(HeaderStyle.Render(" Git Status:") + "\n")
+	s.WriteString(fmt.Sprintf(" Stage: %d files\n", stagedCount))
+	s.WriteString(fmt.Sprintf(" Unstaged: %d files\n", unstagedCount))
 	s.WriteString("\n")
-
-	s.WriteString(HeaderStyle.Render("Modified files:") + "\n\n")
+	s.WriteString(HeaderStyle.Render(" Modified files:") + "\n\n")
 
 	if len(m.Files) == 0 {
-		s.WriteString(HelpStyle.Render("No hay archivos modificados\n"))
+		s.WriteString(HelpStyle.Render("No modified files\n"))
 	} else {
 		for i, file := range m.Files {
-			cursor := " "
+			cursor := "  "
 			if m.Cursor == i {
-				cursor = "▶"
+				cursor = ""
 			}
 
 			staged := " "
@@ -110,16 +97,16 @@ func (m Model) renderFileView() string {
 				style = SelectedStyle
 			}
 
-			line := fmt.Sprintf("%s [%s] %s %s", cursor, staged, file.Status, file.Name)
+			icon := GetIconForFile(file.Name)
+			line := fmt.Sprintf("%s [%s] %s %s", cursor, staged, icon, file.Name)
 			s.WriteString(style.Render(line) + "\n")
 		}
 	}
 
-	// Modificar la sección de controles
 	s.WriteString("\n" + BorderStyle.Render(
-		HelpStyle.Render("Controles:\n")+
-			HelpStyle.Render("  [↑/↓] navegar  [espacio] stage/unstage  [a] stage todos  [x] descartar cambios")+
-			HelpStyle.Render("  [c] commit  [b] ramas  [m] remotes  [p] push  [f] fetch  [l] pull  [r] refresh  [q] salir"),
+		HelpStyle.Render("Controls:\n")+
+			HelpStyle.Render("  [↑/↓] navigate  [space] stage/unstage  [a] stage all  [x] discard changes")+
+			HelpStyle.Render("  [c] commit  [b] branches  [m] remotes  [p] push  [f] fetch  [l] pull  [r] refresh  [q] quit"),
 	))
 
 	return s.String()
@@ -128,12 +115,12 @@ func (m Model) renderFileView() string {
 func (m Model) renderCommitView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("💬 Mensaje de commit:") + "\n\n")
+	s.WriteString(HeaderStyle.Render(" Commit message:") + "\n\n")
 	s.WriteString(InputStyle.Render(m.CommitMsg+"_") + "\n\n")
 
 	s.WriteString(BorderStyle.Render(
-		HelpStyle.Render("Escribe tu mensaje y presiona [Enter] para confirmar\n") +
-			HelpStyle.Render("[Esc] para cancelar"),
+		HelpStyle.Render("Type your message and press [Enter] to confirm\n") +
+			HelpStyle.Render("[Esc] to cancel"),
 	))
 
 	return s.String()
@@ -142,12 +129,12 @@ func (m Model) renderCommitView() string {
 func (m Model) renderBranchView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("🌿 Ramas:") + "\n\n")
+	s.WriteString(HeaderStyle.Render("Branches:") + "\n\n")
 
 	for i, branch := range m.Branches {
-		cursor := " "
+		cursor := "  "
 		if m.Cursor == i {
-			cursor = "▶"
+			cursor = ""
 		}
 
 		current := " "
@@ -165,8 +152,8 @@ func (m Model) renderBranchView() string {
 	}
 
 	s.WriteString("\n" + BorderStyle.Render(
-		HelpStyle.Render("Controles:\n")+
-			HelpStyle.Render("  [↑/↓] navegar  [Enter] cambiar rama  [n] nueva rama  [d] eliminar rama  [Esc] volver"),
+		HelpStyle.Render("Controls:\n")+
+			HelpStyle.Render("  [↑/↓] navigate  [Enter] switch branch  [n] new branch  [d] delete branch  [Esc] back"),
 	))
 
 	return s.String()
@@ -175,15 +162,15 @@ func (m Model) renderBranchView() string {
 func (m Model) renderRemoteView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("🔗 Repositorios remotos:") + "\n\n")
+	s.WriteString(HeaderStyle.Render(" Remote repositories:") + "\n\n")
 
 	if len(m.Remotes) == 0 {
-		s.WriteString(HelpStyle.Render("No hay repositorios remotos configurados\n"))
+		s.WriteString(HelpStyle.Render("No remote repositories configured\n"))
 	} else {
 		for i, remote := range m.Remotes {
-			cursor := " "
+			cursor := "  "
 			if m.Cursor == i {
-				cursor = "▶ "
+				cursor = " "
 			}
 
 			style := NormalStyle
@@ -197,8 +184,8 @@ func (m Model) renderRemoteView() string {
 	}
 
 	s.WriteString("\n" + BorderStyle.Render(
-		HelpStyle.Render("Controles:\n")+
-			HelpStyle.Render("  [↑/↓] navegar  [n] nuevo remote  [d] eliminar  [Esc] volver"),
+		HelpStyle.Render("Controls:\n")+
+			HelpStyle.Render("  [↑/↓] navigate  [n] new remote  [d] delete  [Esc] back"),
 	))
 
 	return s.String()
@@ -207,12 +194,11 @@ func (m Model) renderRemoteView() string {
 func (m Model) renderAddRemoteView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("➕ Añadir nuevo remote:") + "\n\n")
+	s.WriteString(HeaderStyle.Render("➕ Add new remote:") + "\n\n")
 
-	// Campo nombre
-	nameLabel := "Nombre:"
+	nameLabel := "Name:"
 	if m.InputField == "name" {
-		nameLabel = "▶ " + nameLabel
+		nameLabel = " " + nameLabel
 	} else {
 		nameLabel = "  " + nameLabel
 	}
@@ -225,10 +211,9 @@ func (m Model) renderAddRemoteView() string {
 	s.WriteString(HelpStyle.Render(nameLabel) + "\n")
 	s.WriteString(nameStyle.Render(m.RemoteName+"_") + "\n\n")
 
-	// Campo URL
 	urlLabel := "URL:"
 	if m.InputField == "url" {
-		urlLabel = "▶ " + urlLabel
+		urlLabel = " " + urlLabel
 	} else {
 		urlLabel = "  " + urlLabel
 	}
@@ -242,8 +227,8 @@ func (m Model) renderAddRemoteView() string {
 	s.WriteString(urlStyle.Render(m.RemoteURL+"_") + "\n\n")
 
 	s.WriteString(BorderStyle.Render(
-		HelpStyle.Render("Controles:\n") +
-			HelpStyle.Render("  [Tab] cambiar campo  [Enter] confirmar/siguiente  [Esc] cancelar"),
+		HelpStyle.Render("Controls:\n") +
+			HelpStyle.Render("  [Tab] switch field  [Enter] confirm/next  [Esc] cancel"),
 	))
 
 	return s.String()
@@ -252,12 +237,12 @@ func (m Model) renderAddRemoteView() string {
 func (m Model) renderNewBranchView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("🌿 Nueva Rama:") + "\n\n")
+	s.WriteString(HeaderStyle.Render("🌿 New Branch:") + "\n\n")
 	s.WriteString(InputStyle.Render(m.NewBranchName+"_") + "\n\n")
 
 	s.WriteString(BorderStyle.Render(
-		HelpStyle.Render("Escribe el nombre de la rama y presiona [Enter] para crear\n") +
-			HelpStyle.Render("[Esc] para cancelar"),
+		HelpStyle.Render("Type the branch name and press [Enter] to create\n") +
+			HelpStyle.Render("[Esc] to cancel"),
 	))
 
 	return s.String()
@@ -269,17 +254,16 @@ func (m Model) renderConfirmDialog() string {
 
 	switch m.DialogType {
 	case "delete_branch":
-		message = fmt.Sprintf("¿Estás seguro de que deseas eliminar la rama '%s'?", m.DialogTarget)
+		message = fmt.Sprintf("Are you sure you want to delete branch '%s'?", m.DialogTarget)
 	case "discard_changes":
-		message = fmt.Sprintf("¿Estás seguro de que deseas descartar los cambios en '%s'?", m.DialogTarget)
+		message = fmt.Sprintf("Are you sure you want to discard changes in '%s'?", m.DialogTarget)
 	}
 
-	// Crear un "modal" con bordes
 	s.WriteString("\n\n")
 	s.WriteString(BorderStyle.Render(
-		HeaderStyle.Render("⚠ Confirmar acción") + "\n\n" +
+		HeaderStyle.Render(" Confirm action") + "\n\n" +
 			NormalStyle.Render(message) + "\n\n" +
-			HelpStyle.Render("[y] Sí  [n] No"),
+			HelpStyle.Render("[y] Yes  [n] No"),
 	))
 
 	return s.String()

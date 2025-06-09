@@ -2,6 +2,7 @@ package git
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -206,14 +207,25 @@ func DeleteBranch(name string) error {
 
 // DiscardChanges descarta los cambios de un archivo
 func DiscardChanges(filename string) error {
-	// Primero verificamos si el archivo está siendo rastreado
-	cmd := exec.Command("git", "ls-files", filename)
-	if err := cmd.Run(); err != nil {
-		// Si el archivo no está siendo rastreado, lo eliminamos directamente
-		cmd = exec.Command("rm", filename)
-		return cmd.Run()
+	// Verificar si el archivo está siendo rastreado por Git
+	checkTracked := exec.Command("git", "ls-files", "--error-unmatch", filename)
+	if err := checkTracked.Run(); err != nil {
+		// El archivo NO está siendo rastreado, lo eliminamos
+		fmt.Println("Archivo NO rastreado, intentando eliminar:", filename)
+		if err := os.Remove(filename); err != nil {
+			return fmt.Errorf("no se pudo eliminar archivo no rastreado: %w", err)
+		}
+		fmt.Println("Archivo eliminado correctamente")
+		return nil
 	}
-	// Si el archivo está siendo rastreado, usamos checkout
-	cmd = exec.Command("git", "checkout", "--", filename)
-	return cmd.Run()
+
+	// El archivo está rastreado, se descartan los cambios
+	fmt.Println("Archivo rastreado, descartando cambios con git checkout")
+	discard := exec.Command("git", "checkout", "--", filename)
+	if err := discard.Run(); err != nil {
+		return fmt.Errorf("error al descartar cambios con git: %w", err)
+	}
+
+	fmt.Println("Cambios descartados correctamente")
+	return nil
 }

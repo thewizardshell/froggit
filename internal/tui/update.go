@@ -63,19 +63,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				switch m.DialogType {
 				case "delete_branch":
 					if err := git.DeleteBranch(m.DialogTarget); err != nil {
-						m.Message = fmt.Sprintf("✗ Error al eliminar rama: %s", err.Error())
+						m.Message = fmt.Sprintf("✗ Error deleting branch: %s", err.Error())
 						m.MessageType = "error"
 					} else {
-						m.Message = "✓ Rama eliminada exitosamente"
+						m.Message = "✓ Branch deleted successfully"
 						m.MessageType = "success"
 						m.RefreshData()
 					}
 				case "discard_changes":
 					if err := git.DiscardChanges(m.DialogTarget); err != nil {
-						m.Message = fmt.Sprintf("✗ Error al descartar cambios: %s", err.Error())
+						m.Message = fmt.Sprintf("✗ Error discarding changes: %s", err.Error())
 						m.MessageType = "error"
 					} else {
-						m.Message = "✓ Cambios descartados"
+						m.Message = "✓ Changes discarded"
 						m.MessageType = "success"
 						m.RefreshData()
 					}
@@ -106,10 +106,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.CurrentView == CommitView && m.CommitMsg != "" {
 				err := git.Commit(m.CommitMsg)
 				if err != nil {
-					m.Message = fmt.Sprintf("✗ Error al hacer commit: %s", err.Error())
+					m.Message = fmt.Sprintf("✗ Error committing: %s", err.Error())
 					m.MessageType = "error"
 				} else {
-					m.Message = "✓ Commit realizado exitosamente"
+					m.Message = "✓ Changes committed successfully"
 					m.MessageType = "success"
 					m.CurrentView = FileView
 					m.CommitMsg = ""
@@ -119,10 +119,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else if m.CurrentView == NewBranchView && m.NewBranchName != "" {
 				err := git.CreateBranch(m.NewBranchName)
 				if err != nil {
-					m.Message = fmt.Sprintf("✗ Error al crear rama: %s", err.Error())
+					m.Message = fmt.Sprintf("✗ Error creating branch: %s", err.Error())
 					m.MessageType = "error"
 				} else {
-					m.Message = fmt.Sprintf("✓ Rama %s creada exitosamente", m.NewBranchName)
+					m.Message = fmt.Sprintf("✓ Branch %s created successfully", m.NewBranchName)
 					m.MessageType = "success"
 					m.RefreshData()
 					m.CurrentView = BranchView
@@ -138,16 +138,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if selectedBranch != m.CurrentBranch {
 					err := git.Checkout(selectedBranch)
 					if err != nil {
-						m.Message = fmt.Sprintf("✗ Error al cambiar a la rama %s: %s", selectedBranch, err.Error())
+						m.Message = fmt.Sprintf("✗ Error switching to branch %s: %s", selectedBranch, err.Error())
 						m.MessageType = "error"
 					} else {
-						m.Message = fmt.Sprintf("✓ Cambiado a la rama %s", selectedBranch)
+						m.Message = fmt.Sprintf("✓ Switched to branch %s", selectedBranch)
 						m.MessageType = "success"
 						m.CurrentBranch = selectedBranch
 						m.RefreshData()
 					}
 				} else {
-					m.Message = "⚠ Ya estás en la rama seleccionada"
+					m.Message = "⚠ You are already on this branch"
 					m.MessageType = "info"
 				}
 				return m, nil
@@ -197,7 +197,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if len(m.Branches) > 0 && m.Cursor < len(m.Branches) {
 						branchToDelete := m.Branches[m.Cursor]
 						if branchToDelete == m.CurrentBranch {
-							m.Message = "✗ No puedes eliminar la rama actual"
+							m.Message = "✗ Cannot delete current branch"
 							m.MessageType = "error"
 						} else {
 							m.DialogType = "delete_branch"
@@ -213,11 +213,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.Files[m.Cursor].Staged = !m.Files[m.Cursor].Staged
 						if m.Files[m.Cursor].Staged {
 							git.Add(m.Files[m.Cursor].Name)
-							m.Message = fmt.Sprintf("✓ Archivo %s añadido al stage", m.Files[m.Cursor].Name)
+							m.Message = fmt.Sprintf("✓ File %s added to stage", m.Files[m.Cursor].Name)
 							m.MessageType = "success"
 						} else {
 							git.Reset(m.Files[m.Cursor].Name)
-							m.Message = fmt.Sprintf("✓ Archivo %s removido del stage", m.Files[m.Cursor].Name)
+							m.Message = fmt.Sprintf("✓ File %s removed from stage", m.Files[m.Cursor].Name)
 							m.MessageType = "success"
 						}
 					}
@@ -228,7 +228,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 							git.Add(m.Files[i].Name)
 						}
 					}
-					m.Message = "✓ Todos los archivos añadidos al stage"
+					m.Message = "✓ All files added to stage"
 					m.MessageType = "success"
 				case "c":
 					hasStaged := false
@@ -242,7 +242,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.CurrentView = CommitView
 						m.Message = ""
 					} else {
-						m.Message = "⚠ No hay archivos en el stage para commitear"
+						m.Message = "⚠ No staged files to commit"
 						m.MessageType = "error"
 					}
 				case "b":
@@ -255,7 +255,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.Message = ""
 				case "r":
 					m.RefreshData()
-					m.Message = "✓ Estado actualizado"
+					m.Message = "✓ Status updated"
 					m.MessageType = "success"
 				case "p":
 					if !m.IsPushing {
@@ -296,30 +296,30 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case pushMsg:
 		m.IsPushing = false
 		if msg.err != nil {
-			m.Message = fmt.Sprintf("✗ Error al hacer push: %s", msg.err.Error())
+			m.Message = fmt.Sprintf("✗ Error pushing changes: %s", msg.err.Error())
 			m.MessageType = "error"
 		} else {
-			m.Message = "✓ Push realizado exitosamente"
+			m.Message = "✓ Changes pushed successfully"
 			m.MessageType = "success"
 			m.RefreshData()
 		}
 	case fetchMsg:
 		m.IsFetching = false
 		if msg.err != nil {
-			m.Message = "✗ Error al hacer fetch: " + msg.err.Error()
+			m.Message = "✗ Error fetching changes: " + msg.err.Error()
 			m.MessageType = "error"
 		} else {
-			m.Message = "✓ Fetch realizado exitosamente"
+			m.Message = "✓ Changes fetched successfully"
 			m.MessageType = "success"
 			m.RefreshData()
 		}
 	case pullMsg:
 		m.IsPulling = false
 		if msg.err != nil {
-			m.Message = "✗ Error al hacer pull: " + msg.err.Error()
+			m.Message = "✗ Error pulling changes: " + msg.err.Error()
 			m.MessageType = "error"
 		} else {
-			m.Message = "✓ Pull realizado exitosamente"
+			m.Message = "✓ Changes pulled successfully"
 			m.MessageType = "success"
 			m.RefreshData()
 		}
