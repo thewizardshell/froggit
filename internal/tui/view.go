@@ -73,6 +73,22 @@ func (m Model) View() string {
 func (m Model) renderFileView() string {
 	var s strings.Builder
 
+	// Añadir resumen del estado
+	stagedCount := 0
+	unstagedCount := 0
+	for _, file := range m.Files {
+		if file.Staged {
+			stagedCount++
+		} else {
+			unstagedCount++
+		}
+	}
+
+	s.WriteString(HeaderStyle.Render("Git Status:") + "\n")
+	s.WriteString(fmt.Sprintf("📦 Stage: %d archivos\n", stagedCount))
+	s.WriteString(fmt.Sprintf("📝 Sin staging: %d archivos\n", unstagedCount))
+	s.WriteString("\n")
+
 	s.WriteString(HeaderStyle.Render("Modified files:") + "\n\n")
 
 	if len(m.Files) == 0 {
