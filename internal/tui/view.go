@@ -8,11 +8,25 @@ import (
 func (m Model) View() string {
 	var s strings.Builder
 
-	// Título principal
-	s.WriteString(TitleStyle.Render("🌿 GitEasy") + "\n\n")
+	asciiTitle := `
+      ___                           ___         ___         ___               
+     /  /\      ___         ___    /  /\       /  /\       /  /\        ___   
+    /  /:/_    /  /\       /  /\  /  /:/_     /  /::\     /  /:/_      /__/|  
+   /  /:/ /\  /  /:/      /  /:/ /  /:/ /\   /  /:/\:\   /  /:/ /\    |  |:|  
+  /  /:/_/::\/__/::\     /  /:/ /  /:/ /:/_ /  /:/~/::\ /  /:/ /::\   |  |:|  
+ /__/:/__\/\:\__\/\:\__ /  /::\/__/:/ /:/ //__/:/ /:/\:/__/:/ /:/\:\__|__|:|  
+ \  \:\ /~~/:/  \  \:\//__/:/\:\  \:\/:/ /:\  \:\/:/__\\  \:\/:/~/:/__/::::\  
+  \  \:\  /:/    \__\::\__\/  \:\  \::/ /:/ \  \::/     \  \::/ /:/   ~\~~\:\ 
+   \  \:\/:/     /__/:/     \  \:\  \:\/:/   \  \:\      \__\/ /:/      \  \:\
+    \  \::/      \__\/       \__\/\  \::/     \  \:\       /__/:/        \__\/
+     \__\/                         \__\/       \__\/       \__\/              
+`
+
+	// Título principal con ASCII art usando tu TitleStyle
+	s.WriteString(TitleStyle.Render(asciiTitle) + "\n\n")
 
 	// Información de la rama actual
-	s.WriteString(fmt.Sprintf("🌱 Rama actual: %s\n\n", HeaderStyle.Render(m.CurrentBranch)))
+	s.WriteString(fmt.Sprintf("current branch: %s\n\n", HeaderStyle.Render(m.CurrentBranch)))
 
 	// Renderizar vista actual
 	switch m.CurrentView {
@@ -47,7 +61,7 @@ func (m Model) View() string {
 func (m Model) renderFileView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("📁 Archivos modificados:") + "\n\n")
+	s.WriteString(HeaderStyle.Render("Modified files:") + "\n\n")
 
 	if len(m.Files) == 0 {
 		s.WriteString(HelpStyle.Render("No hay archivos modificados\n"))
@@ -75,7 +89,7 @@ func (m Model) renderFileView() string {
 
 	s.WriteString("\n" + BorderStyle.Render(
 		HelpStyle.Render("Controles:\n")+
-			HelpStyle.Render("  [↑/↓] navegar  [espacio] stage/unstage  [a] stage todos\n")+
+			HelpStyle.Render("  [↑/↓] navegar  [espacio] stage/unstage  [a] stage todos")+
 			HelpStyle.Render("  [c] commit  [b] ramas  [m] remotes  [p] push  [r] refresh  [q] salir"),
 	))
 
