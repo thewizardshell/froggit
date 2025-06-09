@@ -40,6 +40,10 @@ func (m Model) View() string {
 		s.WriteString(m.renderRemoteView())
 	case AddRemoteView:
 		s.WriteString(m.renderAddRemoteView())
+	case NewBranchView:
+		s.WriteString(m.renderNewBranchView())
+	case ConfirmDialog:
+		s.WriteString(m.renderConfirmDialog())
 	}
 
 	// Mensaje de estado
@@ -98,7 +102,7 @@ func (m Model) renderFileView() string {
 	// Modificar la sección de controles
 	s.WriteString("\n" + BorderStyle.Render(
 		HelpStyle.Render("Controles:\n")+
-			HelpStyle.Render("  [↑/↓] navegar  [espacio] stage/unstage  [a] stage todos")+
+			HelpStyle.Render("  [↑/↓] navegar  [espacio] stage/unstage  [a] stage todos  [x] descartar cambios")+
 			HelpStyle.Render("  [c] commit  [b] ramas  [m] remotes  [p] push  [f] fetch  [l] pull  [r] refresh  [q] salir"),
 	))
 
@@ -122,7 +126,7 @@ func (m Model) renderCommitView() string {
 func (m Model) renderBranchView() string {
 	var s strings.Builder
 
-	s.WriteString(HeaderStyle.Render("🌿 Seleccionar rama:") + "\n\n")
+	s.WriteString(HeaderStyle.Render("🌿 Ramas:") + "\n\n")
 
 	for i, branch := range m.Branches {
 		cursor := " "
@@ -146,7 +150,7 @@ func (m Model) renderBranchView() string {
 
 	s.WriteString("\n" + BorderStyle.Render(
 		HelpStyle.Render("Controles:\n")+
-			HelpStyle.Render("  [↑/↓] navegar  [Enter] cambiar rama  [Esc] volver"),
+			HelpStyle.Render("  [↑/↓] navegar  [Enter] cambiar rama  [n] nueva rama  [d] eliminar rama  [Esc] volver"),
 	))
 
 	return s.String()
@@ -224,6 +228,42 @@ func (m Model) renderAddRemoteView() string {
 	s.WriteString(BorderStyle.Render(
 		HelpStyle.Render("Controles:\n") +
 			HelpStyle.Render("  [Tab] cambiar campo  [Enter] confirmar/siguiente  [Esc] cancelar"),
+	))
+
+	return s.String()
+}
+
+func (m Model) renderNewBranchView() string {
+	var s strings.Builder
+
+	s.WriteString(HeaderStyle.Render("🌿 Nueva Rama:") + "\n\n")
+	s.WriteString(InputStyle.Render(m.NewBranchName+"_") + "\n\n")
+
+	s.WriteString(BorderStyle.Render(
+		HelpStyle.Render("Escribe el nombre de la rama y presiona [Enter] para crear\n") +
+			HelpStyle.Render("[Esc] para cancelar"),
+	))
+
+	return s.String()
+}
+
+func (m Model) renderConfirmDialog() string {
+	var s strings.Builder
+	var message string
+
+	switch m.DialogType {
+	case "delete_branch":
+		message = fmt.Sprintf("¿Estás seguro de que deseas eliminar la rama '%s'?", m.DialogTarget)
+	case "discard_changes":
+		message = fmt.Sprintf("¿Estás seguro de que deseas descartar los cambios en '%s'?", m.DialogTarget)
+	}
+
+	// Crear un "modal" con bordes
+	s.WriteString("\n\n")
+	s.WriteString(BorderStyle.Render(
+		HeaderStyle.Render("⚠ Confirmar acción") + "\n\n" +
+			NormalStyle.Render(message) + "\n\n" +
+			HelpStyle.Render("[y] Sí  [n] No"),
 	))
 
 	return s.String()

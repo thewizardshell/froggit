@@ -12,6 +12,8 @@ const (
 	BranchView
 	RemoteView
 	AddRemoteView
+	NewBranchView // Nueva vista
+	ConfirmDialog // Nuevo tipo de vista para diálogos de confirmación
 )
 
 type Model struct {
@@ -32,6 +34,10 @@ type Model struct {
 	SpinnerFrames []string
 	IsFetching    bool
 	IsPulling     bool
+	NewBranchName string // Nuevo campo
+
+	DialogType   string // "delete_branch" o "discard_changes"
+	DialogTarget string // Nombre del archivo o rama
 }
 
 func InitialModel() Model {
@@ -57,6 +63,9 @@ func InitialModel() Model {
 		SpinnerIndex:  0,
 		IsFetching:    false,
 		IsPulling:     false,
+		NewBranchName: "",
+		DialogType:    "",
+		DialogTarget:  "",
 	}
 }
 

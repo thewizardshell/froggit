@@ -1,4 +1,3 @@
-// tui/update.go
 package tui
 
 import (
@@ -58,6 +57,38 @@ func (m Model) Init() tea.Cmd {
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if m.CurrentView == ConfirmDialog {
+			switch msg.String() {
+			case "y":
+				switch m.DialogType {
+				case "delete_branch":
+					if err := git.DeleteBranch(m.DialogTarget); err != nil {
+						m.Message = fmt.Sprintf("✗ Error al eliminar rama: %s", err.Error())
+						m.MessageType = "error"
+					} else {
+						m.Message = "✓ Rama eliminada exitosamente"
+						m.MessageType = "success"
+						m.RefreshData()
+					}
+				case "discard_changes":
+					if err := git.DiscardChanges(m.DialogTarget); err != nil {
+						m.Message = fmt.Sprintf("✗ Error al descartar cambios: %s", err.Error())
+						m.MessageType = "error"
+					} else {
+						m.Message = "✓ Cambios descartados"
+						m.MessageType = "success"
+						m.RefreshData()
+					}
+				}
+				m.CurrentView = FileView
+				return m, nil
+			case "n", "esc":
+				m.CurrentView = FileView
+				return m, nil
+			}
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -67,6 +98,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.CommitMsg = ""
 				m.RemoteName = ""
 				m.RemoteURL = ""
+				m.NewBranchName = ""
 				m.Message = ""
 				return m, nil
 			}
@@ -84,29 +116,93 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.RefreshData()
 				}
 				return m, nil
+			} else if m.CurrentView == NewBranchView && m.NewBranchName != "" {
+				err := git.CreateBranch(m.NewBranchName)
+				if err != nil {
+					m.Message = fmt.Sprintf("✗ Error al crear rama: %s", err.Error())
+					m.MessageType = "error"
+				} else {
+					m.Message = fmt.Sprintf("✓ Rama %s creada exitosamente", m.NewBranchName)
+					m.MessageType = "success"
+					m.RefreshData()
+					m.CurrentView = BranchView
+					m.NewBranchName = ""
+				}
+				return m, nil
+			} else if m.CurrentView == BranchView && len(m.Branches) > 0 {
+				selectedBranch := m.Branches[m.Cursor]
+				if selectedBranch != m.CurrentBranch {
+					err := git.Checkout(selectedBranch)
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error al cambiar a la rama %s: %s", selectedBranch, err.Error())
+						m.MessageType = "error"
+					} else {
+						m.Message = fmt.Sprintf("✓ Cambiado a la rama %s", selectedBranch)
+						m.MessageType = "success"
+						m.CurrentBranch = selectedBranch
+						m.RefreshData()
+					}
+				} else {
+					m.Message = "⚠ Ya estás en la rama seleccionada"
+					m.MessageType = "info"
+				}
+				return m, nil
 			}
 		case "backspace":
 			if m.CurrentView == CommitView && len(m.CommitMsg) > 0 {
 				m.CommitMsg = m.CommitMsg[:len(m.CommitMsg)-1]
 				return m, nil
+			} else if m.CurrentView == NewBranchView && len(m.NewBranchName) > 0 {
+				m.NewBranchName = m.NewBranchName[:len(m.NewBranchName)-1]
+				return m, nil
 			}
-		case "up", "k":
-			if m.Cursor > 0 {
-				m.Cursor--
+		case "up":
+			if m.CurrentView != CommitView && m.CurrentView != NewBranchView {
+				if m.Cursor > 0 {
+					m.Cursor--
+				}
 			}
-		case "down", "j":
-			if m.Cursor < len(m.Files)-1 {
-				m.Cursor++
+		case "down":
+			if m.CurrentView != CommitView && m.CurrentView != NewBranchView {
+				if m.CurrentView == FileView && m.Cursor < len(m.Files)-1 {
+					m.Cursor++
+				} else if m.CurrentView == BranchView && m.Cursor < len(m.Branches)-1 {
+					m.Cursor++
+				} else if m.CurrentView == RemoteView && m.Cursor < len(m.Remotes)-1 {
+					m.Cursor++
+				}
 			}
 		default:
-			// Si estamos en CommitView y la tecla es un caracter imprimible
 			if m.CurrentView == CommitView {
 				if len(msg.Runes) == 1 && isPrintableChar(msg.Runes[0]) {
 					m.CommitMsg += string(msg.Runes)
 					return m, nil
 				}
+			} else if m.CurrentView == NewBranchView {
+				if len(msg.Runes) == 1 && isPrintableChar(msg.Runes[0]) {
+					m.NewBranchName += string(msg.Runes)
+					return m, nil
+				}
+			} else if m.CurrentView == BranchView {
+				switch msg.String() {
+				case "n":
+					m.CurrentView = NewBranchView
+					m.NewBranchName = ""
+					return m, nil
+				case "d":
+					if m.Cursor < len(m.Branches) {
+						branchToDelete := m.Branches[m.Cursor]
+						if branchToDelete == m.CurrentBranch {
+							m.Message = "✗ No puedes eliminar la rama actual"
+							m.MessageType = "error"
+						} else {
+							m.DialogType = "delete_branch"
+							m.DialogTarget = branchToDelete
+							m.CurrentView = ConfirmDialog
+						}
+					}
+				}
 			} else if m.CurrentView == FileView {
-				// Comandos de una letra solo disponibles en FileView
 				switch msg.String() {
 				case " ":
 					if len(m.Files) > 0 {
@@ -178,6 +274,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.MessageType = "info"
 						return m, tea.Batch(performPull(), spinner())
 					}
+				case "x":
+					if len(m.Files) > 0 {
+						m.DialogType = "discard_changes"
+						m.DialogTarget = m.Files[m.Cursor].Name
+						m.CurrentView = ConfirmDialog
+						return m, nil
+					}
 				}
 			}
 		}
@@ -220,7 +323,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// isPrintableChar verifica si un caracter es imprimible
 func isPrintableChar(r rune) bool {
 	return r >= 32 && r <= 126 || r >= 128 && r <= 255
 }
