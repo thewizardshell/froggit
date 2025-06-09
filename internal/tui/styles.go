@@ -6,13 +6,14 @@ import "github.com/charmbracelet/lipgloss"
 var (
 	TitleStyle = lipgloss.NewStyle().
 			Bold(true).
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#00A86B")).
-			Padding(0, 1)
+			Foreground(lipgloss.Color("#00FF7F")). // Verde brillante
+		// Padding(1, 2).                         // Espaciado vertical y horizontal
+		// Margin(1, 0, 1, 0).                         // Margen arriba y abajo
+		BorderForeground(lipgloss.Color("#00A86B")) // Borde verde más oscuro
 
 	SelectedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#228B22")).
+			Background(lipgloss.Color("#00A86B")).
 			Padding(0, 1)
 
 	NormalStyle = lipgloss.NewStyle().

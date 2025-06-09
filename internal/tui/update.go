@@ -2,11 +2,31 @@ package tui
 
 import (
 	"fmt"
+	"time"
 
 	"giteasy/internal/git"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
+
+type pushMsg struct {
+	err error
+}
+
+type spinnerTickMsg struct{}
+
+func spinner() tea.Cmd {
+	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
+		return spinnerTickMsg{}
+	})
+}
+
+func performPush() tea.Cmd {
+	return func() tea.Msg {
+		err := git.Push()
+		return pushMsg{err: err}
+	}
+}
 
 func (m Model) Init() tea.Cmd {
 	return nil
@@ -27,6 +47,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case AddRemoteView:
 			return m.updateAddRemoteView(msg)
 		}
+	}
+	switch msg := msg.(type) {
+	case spinnerTickMsg:
+		m.SpinnerIndex = (m.SpinnerIndex + 1) % len(m.SpinnerFrames)
+		return m, spinner()
+	case pushMsg:
+		m.IsPushing = false
+		if msg.err != nil {
+			m.Message = fmt.Sprintf("✗ Error al hacer push: %s", msg.err.Error())
+			m.MessageType = "error"
+		} else {
+			m.Message = "✓ Push realizado exitosamente"
+			m.MessageType = "success"
+		}
+		return m, nil
 	}
 	return m, nil
 }
@@ -102,13 +137,11 @@ func (m Model) updateFileView(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.MessageType = "success"
 
 	case "p": // Push
-		err := git.Push()
-		if err != nil {
-			m.Message = fmt.Sprintf("✗ Error al hacer push: %s", err.Error())
-			m.MessageType = "error"
-		} else {
-			m.Message = "✓ Push realizado exitosamente"
-			m.MessageType = "success"
+		if !m.IsPushing {
+			m.IsPushing = true
+			m.Message = "Pushing..."
+			m.MessageType = "info"
+			return m, tea.Batch(performPush(), spinner())
 		}
 	}
 
