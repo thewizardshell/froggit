@@ -27,6 +27,9 @@ type Model struct {
 	InputField    string // Para determinar qué campo estamos editando
 	Message       string
 	MessageType   string // "error", "success", ""
+	IsPushing     bool
+	SpinnerIndex  int
+	SpinnerFrames []string
 }
 
 func InitialModel() Model {
@@ -47,6 +50,9 @@ func InitialModel() Model {
 		InputField:    "",
 		Message:       "",
 		MessageType:   "",
+		SpinnerFrames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+		IsPushing:     false,
+		SpinnerIndex:  0,
 	}
 }
 
