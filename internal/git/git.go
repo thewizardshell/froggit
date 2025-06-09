@@ -1,6 +1,7 @@
 package git
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 )
@@ -162,4 +163,25 @@ func AddRemote(name, url string) error {
 func RemoveRemote(name string) error {
 	cmd := exec.Command("git", "remote", "remove", name)
 	return cmd.Run()
+}
+
+// Fetch obtiene todos los cambios y ramas del repositorio remoto
+func Fetch() error {
+	output, err := exec.Command("git", "fetch", "-a").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error al hacer fetch: %v - %s", err, string(output))
+	}
+	return nil
+}
+
+// Pull obtiene e integra los cambios del repositorio remoto
+func Pull() error {
+	output, err := exec.Command("git", "pull").CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("error al hacer pull: %v - %s", err, string(output))
+	}
+	if strings.Contains(string(output), "Already up to date") {
+		return fmt.Errorf("el repositorio ya está actualizado")
+	}
+	return nil
 }

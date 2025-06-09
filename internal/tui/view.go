@@ -9,14 +9,18 @@ func (m Model) View() string {
 	var s strings.Builder
 
 	asciiTitle := `
-
-░██████╗░██╗████████╗███████╗░█████╗░░██████╗██╗░░░██╗
-██╔════╝░██║╚══██╔══╝██╔════╝██╔══██╗██╔════╝╚██╗░██╔╝
-██║░░██╗░██║░░░██║░░░█████╗░░███████║╚█████╗░░╚████╔╝░
-██║░░╚██╗██║░░░██║░░░██╔══╝░░██╔══██║░╚═══██╗░░╚██╔╝░░
-╚██████╔╝██║░░░██║░░░███████╗██║░░██║██████╔╝░░░██║░░░
-░╚═════╝░╚═╝░░░╚═╝░░░╚══════╝╚═╝░░╚═╝╚═════╝░░░░╚═╝░░░
-
+                   ___           ___           ___           ___                                
+     ___          /  /\         /  /\         /  /\         /  /\           ___         ___     
+    /  /\        /  /::\       /  /::\       /  /::\       /  /::\         /__/\       /__/\    
+   /  /::\      /  /:/\:\     /  /:/\:\     /  /:/\:\     /  /:/\:\        \__\:\      \  \:\   
+  /  /:/\:\    /  /::\ \:\   /  /:/  \:\   /  /:/  \:\   /  /:/  \:\       /  /::\      \__\:\  
+ /  /::\ \:\  /__/:/\:\_\:\ /__/:/ \__\:\ /__/:/_\_ \:\ /__/:/_\_ \:\   __/  /:/\/      /  /::\ 
+/__/:/\:\ \:\ \__\/~|::\/:/ \  \:\ /  /:/ \  \:\__/\_\/ \  \:\__/\_\/  /__/\/:/~~      /  /:/\:\
+\__\/  \:\_\/    |  |:|::/   \  \:\  /:/   \  \:\ \:\    \  \:\ \:\    \  \::/        /  /:/__\/
+     \  \:\      |  |:|\/     \  \:\/:/     \  \:\/:/     \  \:\/:/     \  \:\       /__/:/     
+      \__\/      |__|:|~       \  \::/       \  \::/       \  \::/       \__\/       \__\/      
+                  \__\|         \__\/         \__\/         \__\/                               
+			    @thewizardshell - jun 2025 - version beta 0.0.1 - in development
 `
 	// Título principal con ASCII art usando tu TitleStyle
 	s.WriteString(TitleStyle.Render(asciiTitle) + "\n\n")
@@ -51,6 +55,14 @@ func (m Model) View() string {
 		}
 	}
 
+	// Agregar indicadores de estado para fetch y pull
+	if m.IsFetching {
+		s.WriteString("\n" + SpinnerStyle.Render(fmt.Sprintf("%s Fetching...", m.SpinnerFrames[m.SpinnerIndex])))
+	}
+	if m.IsPulling {
+		s.WriteString("\n" + SpinnerStyle.Render(fmt.Sprintf("%s Pulling...", m.SpinnerFrames[m.SpinnerIndex])))
+	}
+
 	return s.String()
 }
 
@@ -83,10 +95,11 @@ func (m Model) renderFileView() string {
 		}
 	}
 
+	// Modificar la sección de controles
 	s.WriteString("\n" + BorderStyle.Render(
 		HelpStyle.Render("Controles:\n")+
 			HelpStyle.Render("  [↑/↓] navegar  [espacio] stage/unstage  [a] stage todos")+
-			HelpStyle.Render("  [c] commit  [b] ramas  [m] remotes  [p] push  [r] refresh  [q] salir"),
+			HelpStyle.Render("  [c] commit  [b] ramas  [m] remotes  [p] push  [f] fetch  [l] pull  [r] refresh  [q] salir"),
 	))
 
 	return s.String()

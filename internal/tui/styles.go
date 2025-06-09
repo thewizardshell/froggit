@@ -5,42 +5,39 @@ import "github.com/charmbracelet/lipgloss"
 // Estilos con tema verde
 var (
 	TitleStyle = lipgloss.NewStyle().
-			Bold(true).
-			Foreground(lipgloss.Color("#00FF7F")). // Verde brillante
-		// Padding(1, 2).                         // Espaciado vertical y horizontal
-		// Margin(1, 0, 1, 0).                         // Margen arriba y abajo
-		BorderForeground(lipgloss.Color("#00A86B")) // Borde verde más oscuro
+			Foreground(lipgloss.Color("76"))
 
-	SelectedStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#00A86B")).
-			Padding(0, 1)
+	HeaderStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("34")).
+			Bold(true)
 
 	NormalStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#E8F5E8"))
+			Foreground(lipgloss.Color("252"))
 
-	HelpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#90EE90"))
+	SelectedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("76")).
+			Bold(true)
 
 	ErrorStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FF6B6B")).
+			Foreground(lipgloss.Color("196")).
 			Bold(true)
 
 	SuccessStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#00FF7F")).
+			Foreground(lipgloss.Color("76")).
 			Bold(true)
 
-	InputStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FFFFFF")).
-			Background(lipgloss.Color("#2E8B57")).
-			Padding(0, 1)
-
-	HeaderStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#32CD32")).
-			Bold(true)
+	HelpStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("241"))
 
 	BorderStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#228B22")).
-			Padding(1, 2)
+			BorderForeground(lipgloss.Color("240")).
+			Padding(1)
+
+	InputStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("34"))
+
+	SpinnerStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("76")).
+			Bold(true)
 )

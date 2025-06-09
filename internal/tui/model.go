@@ -30,6 +30,8 @@ type Model struct {
 	IsPushing     bool
 	SpinnerIndex  int
 	SpinnerFrames []string
+	IsFetching    bool
+	IsPulling     bool
 }
 
 func InitialModel() Model {
@@ -53,6 +55,8 @@ func InitialModel() Model {
 		SpinnerFrames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
 		IsPushing:     false,
 		SpinnerIndex:  0,
+		IsFetching:    false,
+		IsPulling:     false,
 	}
 }
 
