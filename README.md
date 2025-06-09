@@ -1,7 +1,7 @@
-<h1 align="center">GitEasy</h1>
+<h1 align="center">Froggit🐸 </h1>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/ee2b2df3-45bb-4f7f-a548-21223cb13516" alt="GitEasy Logo" width="300" />
+  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="GitEasy Logo" width="450" />
 </p>
 
 <p align="center">
@@ -13,13 +13,13 @@
 
 ## 📸 Preview
 
-![GitEasy TUI](https://github.com/user-attachments/assets/78ff0981-d3cb-4ba6-a9ee-c6b88dd9a0ae)
+![image](https://github.com/user-attachments/assets/2777c471-ff74-4f6a-b0ec-513534cf262e)
 
 ---
 
 ## 🧭 Overview
 
-**GitEasy** is a command-line application designed to make Git more accessible and efficient. Whether you're staging files, managing branches, or pushing to a remote, GitEasy offers a clean, visual interface to handle common Git tasks — no need to memorize complex commands.
+**Froggit** is a command-line application designed to make Git more accessible and efficient. Whether you're staging files, managing branches, or pushing to a remote, GitEasy offers a clean, visual interface to handle common Git tasks — no need to memorize complex commands.
 
 ---
 
