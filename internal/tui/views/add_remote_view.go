@@ -7,7 +7,6 @@ import (
 	"froggit/internal/tui/styles"
 )
 
-// RenderAddRemoteView dibuja la vista para agregar un nuevo remoto
 func RenderAddRemoteView(m model.Model) string {
 	var s strings.Builder
 

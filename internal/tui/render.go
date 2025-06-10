@@ -10,8 +10,8 @@ import (
 	view "froggit/internal/tui/views"
 )
 
-// Render construye toda la salida TUI dado un model.Model.
-// Lo llamas desde tu main: fmt.Println(tui.Render(m))
+// Render builds all the TUI output given a model.Model.
+// You call it from your main: fmt.Println(tui.Render(m))
 func Render(m model.Model) string {
 	var sb strings.Builder
 

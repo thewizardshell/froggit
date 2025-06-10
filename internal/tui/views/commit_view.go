@@ -7,7 +7,6 @@ import (
 	"froggit/internal/tui/styles"
 )
 
-// RenderCommitView dibuja la vista de mensaje de commit
 func RenderCommitView(m model.Model) string {
 	var s strings.Builder
 

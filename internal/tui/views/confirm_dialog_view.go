@@ -8,7 +8,6 @@ import (
 	"froggit/internal/tui/styles"
 )
 
-// RenderConfirmDialog muestra un cuadro de confirmación según el tipo de acción
 func RenderConfirmDialog(m model.Model) string {
 	var s strings.Builder
 	var message string

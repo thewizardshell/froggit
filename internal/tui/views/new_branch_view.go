@@ -7,7 +7,6 @@ import (
 	"froggit/internal/tui/styles"
 )
 
-// RenderNewBranchView dibuja la vista para crear una nueva rama
 func RenderNewBranchView(m model.Model) string {
 	var s strings.Builder
 

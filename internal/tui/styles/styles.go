@@ -4,9 +4,9 @@ import "github.com/charmbracelet/lipgloss"
 
 // Paleta base
 const (
-	Green     = "76"  // Verde menta
-	DarkGreen = "34"  // Verde oscuro
-	Gray      = "240" // Gris
+	Green     = "76"
+	DarkGreen = "34"
+	Gray      = "240"
 	LightGray = "252"
 	Red       = "196"
 )

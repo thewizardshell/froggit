@@ -9,7 +9,6 @@ import (
 	"froggit/internal/tui/styles"
 )
 
-// RenderFileView dibuja la vista de archivos modificados
 func RenderFileView(m model.Model) string {
 	var s strings.Builder
 

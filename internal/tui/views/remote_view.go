@@ -8,7 +8,6 @@ import (
 	"froggit/internal/tui/styles"
 )
 
-// RenderRemoteView dibuja la vista de repositorios remotos
 func RenderRemoteView(m model.Model) string {
 	var s strings.Builder
 

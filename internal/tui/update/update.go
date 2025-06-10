@@ -1,3 +1,5 @@
+// Package update handles the core message loop for user interactions
+// in the Froggit TUI application, using the Bubble Tea framework.
 package update
 
 import (
@@ -10,50 +12,46 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Mensajes internos de operación
+// Internal messages for async operations
 type pushMsg struct{ err error }
 type fetchMsg struct{ err error }
 type pullMsg struct{ err error }
 type spinnerTickMsg struct{}
 
-// spinner devuelve un Cmd que envía spinnerTickMsg cada 100ms.
+// spinner returns a Cmd that emits spinnerTickMsg every 100ms.
 func spinner() tea.Cmd {
 	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
 		return spinnerTickMsg{}
 	})
 }
 
-// performPush ejecuta git.Push en un goroutine y envía pushMsg.
+// performPush runs git.Push asynchronously and returns a pushMsg.
 func performPush() tea.Cmd {
 	return func() tea.Msg {
 		return pushMsg{err: git.Push()}
 	}
 }
 
-// performFetch ejecuta git.Fetch en un goroutine y envía fetchMsg.
+// performFetch runs git.Fetch asynchronously and returns a fetchMsg.
 func performFetch() tea.Cmd {
 	return func() tea.Msg {
 		return fetchMsg{err: git.Fetch()}
 	}
 }
 
-// performPull ejecuta git.Pull en un goroutine y envía pullMsg.
+// performPull runs git.Pull asynchronously and returns a pullMsg.
 func performPull() tea.Cmd {
 	return func() tea.Msg {
 		return pullMsg{err: git.Pull()}
 	}
 }
 
-// Update procesa un mensaje Bubble Tea y devuelve el modelo actualizado
-// y el siguiente Cmd a ejecutar (o nil).
+// Update handles Bubble Tea messages and returns the updated model
+// along with the next command to execute.
 func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
-		// msg es ya un tea.KeyMsg, así que podemos hacer:
-		// km := msg
-
-		// 1) Confirm dialog
 		if m.CurrentView == model.ConfirmDialog {
 			switch msg.String() {
 			case "y":
@@ -87,7 +85,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		// 2) Navegación global
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
@@ -174,10 +171,8 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			return m, nil
 
 		case "up":
-			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView {
-				if m.Cursor > 0 {
-					m.Cursor--
-				}
+			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView && m.Cursor > 0 {
+				m.Cursor--
 			}
 			return m, nil
 
@@ -201,7 +196,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		// 3) Entrada de texto para CommitView
 		if m.CurrentView == model.CommitView {
 			if len(msg.Runes) == 1 && isPrintableChar(msg.Runes[0]) {
 				m.CommitMsg += string(msg.Runes)
@@ -209,7 +203,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			}
 		}
 
-		// 4) Entrada de texto para NewBranchView
 		if m.CurrentView == model.NewBranchView {
 			if len(msg.Runes) == 1 && isPrintableChar(msg.Runes[0]) {
 				m.NewBranchName += string(msg.Runes)
@@ -217,7 +210,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			}
 		}
 
-		// 5) Comandos en BranchView
 		if m.CurrentView == model.BranchView {
 			switch msg.String() {
 			case "n":
@@ -240,7 +232,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			}
 		}
 
-		// 6) Comandos en FileView
 		if m.CurrentView == model.FileView {
 			switch msg.String() {
 			case " ":
@@ -365,7 +356,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 	return m, nil
 }
 
-// isPrintableChar detecta caracteres imprimibles ASCII extendido.
+// isPrintableChar checks whether a rune is a printable ASCII or extended character.
 func isPrintableChar(r rune) bool {
 	return (r >= 32 && r <= 126) || (r >= 128 && r <= 255)
 }

@@ -1,3 +1,6 @@
+// Package model defines the core application state (Model) for the Froggit TUI.
+// It includes view types, the main Model structure, and helper functions
+// for initializing and refreshing the application state.
 package model
 
 import (
@@ -12,8 +15,8 @@ const (
 	BranchView
 	RemoteView
 	AddRemoteView
-	NewBranchView // Nueva vista
-	ConfirmDialog // Nuevo tipo de vista para diálogos de confirmación
+	NewBranchView
+	ConfirmDialog
 )
 
 type Model struct {
@@ -26,18 +29,18 @@ type Model struct {
 	CommitMsg     string
 	RemoteName    string
 	RemoteURL     string
-	InputField    string // Para determinar qué campo estamos editando
+	InputField    string
 	Message       string
-	MessageType   string // "error", "success", ""
+	MessageType   string
 	IsPushing     bool
 	SpinnerIndex  int
 	SpinnerFrames []string
 	IsFetching    bool
 	IsPulling     bool
-	NewBranchName string // Nuevo campo
+	NewBranchName string
 
-	DialogType   string // "delete_branch" o "discard_changes"
-	DialogTarget string // Nombre del archivo o rama
+	DialogType   string
+	DialogTarget string
 }
 
 func InitialModel() Model {
