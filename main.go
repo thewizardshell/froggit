@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,6 +12,39 @@ import (
 	"froggit/internal/tui/update"
 
 	tea "github.com/charmbracelet/bubbletea"
+)
+
+const (
+	VERSION            = "beta-0.1.0"
+	AUTHOR             = "Vicente Roa | Github: @thewizardshell"
+	REPO               = "https://github.com/thewizardshell/froggit"
+	SUPPORTED_COMMANDS = `
+Supported Git Commands:
+    - init: Initialize a new Git repository
+    - status: Show working tree status
+    - add: Add files to staging area
+    - commit: Record changes to the repository
+    - branch: List, create, or delete branches
+    - checkout: Switch branches
+    - remote: Manage remote repositories
+    - push: Push changes to remote repository
+    - pull: Fetch from remote repository
+`
+	KEYBOARD_SHORTCUTS = `
+Keyboard Shortcuts:
+    q, ctrl+c: Quit
+    h: Show help
+    j/k: Navigate down/up
+    space: Select/deselect file
+    a: Stage all files
+    c: Commit changes
+    b: Create new branch
+    r: Add remote
+    p: Push changes
+    l: Pull changes
+    esc: Go back/cancel
+    enter: Confirm/execute
+`
 )
 
 type App struct {
@@ -34,6 +68,37 @@ func (a App) View() string {
 }
 
 func main() {
+	//flags
+	versionFlag := flag.Bool("version", false, "Print version information")
+	helpFlag := flag.Bool("help", false, "Print help information")
+	commandsFlag := flag.Bool("commands", false, "List supported Git commands")
+	keyboardFlag := flag.Bool("keys", false, "List keyboard shortcuts")
+
+	// Parse flags
+	flag.Parse()
+
+	// Handle version flag
+	if *versionFlag {
+		fmt.Printf("Version: %s\nAuthor: %s\nRepository: %s\n", VERSION, AUTHOR, REPO)
+		os.Exit(0)
+	}
+
+	// Handle help flag
+	if *helpFlag {
+		flag.Usage()
+		os.Exit(0)
+	}
+
+	// Handle commands flag
+	if *commandsFlag {
+		fmt.Print(SUPPORTED_COMMANDS)
+		os.Exit(0)
+	}
+
+	if *keyboardFlag {
+		fmt.Print(KEYBOARD_SHORTCUTS)
+		os.Exit(0)
+	}
 	// Verificar si estamos en un repositorio Git o inicializar
 	if !git.IsGitRepository() {
 		fmt.Println("🔧 No estás en un repositorio Git")
