@@ -1,7 +1,7 @@
 <h1 align="center">Froggit 🐸</h1>
 
 <p align="center">
-  <img src="assets/logo.png" alt="Froggit Logo" width="450" />
+  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="GitEasy Logo" width="450" />
 </p>
 
 <p align="center">
@@ -10,11 +10,11 @@
 </p>
 
 <p align="center">
-  <a href="#installation">Installation</a> •
+  <a href="https://froggit-docs.vercel.app/guides/install/">Installation</a> •
   <a href="#features">Features</a> •
   <a href="#usage">Usage</a> •
-  <a href="#keyboard-shortcuts">Shortcuts</a> •
-  <a href="docs/">Documentation</a>
+  <a href="https://github.com/thewizardshell/froggit/blob/master/docs/keyboard-shortcuts.md">Shortcuts</a> •
+  <a href="https://github.com/thewizardshell/froggit/tree/master/docs">Documentation</a>
 </p>
 
 ## ⚡️ Quick Start
