@@ -1,4 +1,4 @@
-package tui
+package icons
 
 import (
 	"path/filepath"

@@ -1,7 +1,7 @@
-package tui
+package model
 
 import (
-	"giteasy/internal/git"
+	"froggit/internal/git"
 )
 
 type View int
