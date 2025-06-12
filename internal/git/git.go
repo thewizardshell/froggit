@@ -229,3 +229,21 @@ func DiscardChanges(filename string) error {
 	fmt.Println("Cambios descartados correctamente")
 	return nil
 }
+
+// HasRemoteChanges verifica si hay commits pendientes de pull desde el remoto
+func HasRemoteChanges(branch string) (bool, error) {
+	// Ejecuta git fetch para actualizar refs
+	err := Fetch()
+	if err != nil {
+		return false, err
+	}
+
+	cmd := exec.Command("git", "rev-list", "--count", fmt.Sprintf("HEAD..origin/%s", branch))
+	output, err := cmd.Output()
+	if err != nil {
+		return false, err
+	}
+
+	count := strings.TrimSpace(string(output))
+	return count != "0", nil
+}

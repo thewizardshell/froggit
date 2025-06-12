@@ -20,24 +20,25 @@ const (
 )
 
 type Model struct {
-	Files         []git.FileItem
-	Branches      []string
-	Remotes       []string
-	CurrentBranch string
-	Cursor        int
-	CurrentView   View
-	CommitMsg     string
-	RemoteName    string
-	RemoteURL     string
-	InputField    string
-	Message       string
-	MessageType   string
-	IsPushing     bool
-	SpinnerIndex  int
-	SpinnerFrames []string
-	IsFetching    bool
-	IsPulling     bool
-	NewBranchName string
+	Files            []git.FileItem
+	Branches         []string
+	Remotes          []string
+	CurrentBranch    string
+	Cursor           int
+	CurrentView      View
+	CommitMsg        string
+	RemoteName       string
+	RemoteURL        string
+	InputField       string
+	Message          string
+	MessageType      string
+	IsPushing        bool
+	SpinnerIndex     int
+	SpinnerFrames    []string
+	IsFetching       bool
+	IsPulling        bool
+	NewBranchName    string
+	HasRemoteChanges bool
 
 	DialogType   string
 	DialogTarget string
@@ -47,28 +48,30 @@ func InitialModel() Model {
 	files, _ := git.GetModifiedFiles()
 	branches, current := git.GetBranches()
 	remotes, _ := git.GetRemotes()
+	hasRemoteChanges, _ := git.HasRemoteChanges(current)
 
 	return Model{
-		Files:         files,
-		Branches:      branches,
-		Remotes:       remotes,
-		CurrentBranch: current,
-		Cursor:        0,
-		CurrentView:   FileView,
-		CommitMsg:     "",
-		RemoteName:    "",
-		RemoteURL:     "",
-		InputField:    "",
-		Message:       "",
-		MessageType:   "",
-		SpinnerFrames: []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
-		IsPushing:     false,
-		SpinnerIndex:  0,
-		IsFetching:    false,
-		IsPulling:     false,
-		NewBranchName: "",
-		DialogType:    "",
-		DialogTarget:  "",
+		Files:            files,
+		Branches:         branches,
+		Remotes:          remotes,
+		CurrentBranch:    current,
+		Cursor:           0,
+		CurrentView:      FileView,
+		CommitMsg:        "",
+		RemoteName:       "",
+		RemoteURL:        "",
+		InputField:       "",
+		Message:          "",
+		MessageType:      "",
+		SpinnerFrames:    []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"},
+		IsPushing:        false,
+		SpinnerIndex:     0,
+		IsFetching:       false,
+		IsPulling:        false,
+		NewBranchName:    "",
+		HasRemoteChanges: hasRemoteChanges,
+		DialogType:       "",
+		DialogTarget:     "",
 	}
 }
 
@@ -76,9 +79,11 @@ func (m *Model) RefreshData() {
 	files, _ := git.GetModifiedFiles()
 	branches, current := git.GetBranches()
 	remotes, _ := git.GetRemotes()
+	hasRemoteChanges, _ := git.HasRemoteChanges(current)
 
 	m.Files = files
 	m.Branches = branches
 	m.Remotes = remotes
 	m.CurrentBranch = current
+	m.HasRemoteChanges = hasRemoteChanges
 }

@@ -22,9 +22,13 @@ func RenderFileView(m model.Model) string {
 		}
 	}
 
-	s.WriteString(styles.HeaderStyle.Render(" Git Status:") + "\n")
-	s.WriteString(fmt.Sprintf(" Stage: %d files\n", stagedCount))
-	s.WriteString(fmt.Sprintf(" Unstaged: %d files\n", unstagedCount))
+	s.WriteString(styles.HeaderStyle.Render("  Git Status:") + "\n")
+	s.WriteString(fmt.Sprintf("  Staged: %d files\n", stagedCount))
+	s.WriteString(fmt.Sprintf("  Unstaged: %d files\n", unstagedCount))
+
+	if m.HasRemoteChanges {
+		s.WriteString(styles.WarningStyle.Render("  New commits are available on the remote please pull\n"))
+	}
 	s.WriteString("\n")
 	s.WriteString(styles.HeaderStyle.Render(" Modified files:") + "\n\n")
 
