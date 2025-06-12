@@ -21,9 +21,7 @@
 
 ```bash
 # Install
-go install github.com/thewizardshell/froggit@latest
 
-# Or build from source
 git clone https://github.com/thewizardshell/froggit.git
 cd froggit
 go build
