@@ -1,7 +1,7 @@
 <h1 align="center">Froggit 🐸</h1>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="GitEasy Logo" width="450" />
+  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="Froggit Logo" width="450" />
 </p>
 
 <p align="center">
@@ -18,6 +18,8 @@
 </p>
 
 ## ⚡️ Quick Start
+
+![preview_short_froggit](https://github.com/user-attachments/assets/7b5a2dd6-fbc3-4035-83fe-a072d2298f57)
 
 ```bash
 # Install
@@ -97,8 +99,12 @@ MIT License - see [LICENSE](LICENSE) for details
 
 **Vicente Roa** ([@thewizardshell](https://github.com/thewizardshell))
 
----
+# 🔗 Related Tools and Alternatives
+While Froggit is designed to be a minimal and beginner-friendly Git TUI, there are several excellent tools out there that offer more advanced features or different workflows. Depending on your needs, you might want to explore them as well:
 
-<p align="center">
-  Made with ❤️ and Go
-</p>
+- LazyGit: A powerful and widely-used Git TUI, great for intermediate and advanced users: https://github.com/jesseduffield/lazygit.
+- GitKraken: A GUI Git client with a rich graphical interface: https://www.gitkraken.com/.
+- tig : Text-mode interface for Git, useful for browsing history and commits: https://github.com/jonas/tig.
+- Magit: An interface to Git for Emacs users, highly customizable and powerful: https://github.com/magit/magit.
+- 
+Froggit aims to serve as a stepping stone — especially for those new to Git or who prefer simplicity over complexity. Feel free to try different tools and find what works best for your workflow!
