@@ -106,5 +106,5 @@ While Froggit is designed to be a minimal and beginner-friendly Git TUI, there a
 - GitKraken: A GUI Git client with a rich graphical interface: https://www.gitkraken.com/.
 - tig : Text-mode interface for Git, useful for browsing history and commits: https://github.com/jonas/tig.
 - Magit: An interface to Git for Emacs users, highly customizable and powerful: https://github.com/magit/magit.
-- 
+  
 Froggit aims to serve as a stepping stone — especially for those new to Git or who prefer simplicity over complexity. Feel free to try different tools and find what works best for your workflow!
