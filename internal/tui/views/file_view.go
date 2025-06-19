@@ -58,7 +58,12 @@ func RenderFileView(m model.Model) string {
 	}
 
 	// Build minimal controls; extra controls go in Help view
-	controls := []string{"[↑/↓] navigate", "[space] stage/unstage", "[x] discard changes"}
+	controls := []string{"[↑/↓] navigate", "[space] stage/unstage"}
+
+	// Only offer discard option when there are modified files to discard
+	if len(m.Files) > 0 {
+		controls = append(controls, "[x] discard changes")
+	}
 
 	if stagedCount > 0 {
 		controls = append(controls, "[c] commit")
@@ -69,6 +74,7 @@ func RenderFileView(m model.Model) string {
 	controlsLine := "  " + strings.Join(controls, "  ")
 
 	s.WriteString("\n" + styles.BorderStyle.Render(
+		//
 		styles.HelpStyle.Render("Controls:\n")+
 			styles.HelpStyle.Render(controlsLine),
 	))
