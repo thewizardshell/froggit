@@ -86,8 +86,17 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		}
 
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c":
 			return m, tea.Quit
+
+		case "q":
+			// Allow exiting with "q" only when we are NOT in an input-focused view.
+			// When the user is typing (e.g. commit message, new branch name, adding remotes)
+			// the character should be treated as normal text instead of a quit signal.
+			if m.CurrentView == model.FileView || m.CurrentView == model.BranchView || m.CurrentView == model.RemoteView || m.CurrentView == model.ConfirmDialog {
+				return m, tea.Quit
+			}
+			// Otherwise, fall through so the rune is processed as normal input.
 
 		case "esc":
 			if m.CurrentView != model.FileView {
