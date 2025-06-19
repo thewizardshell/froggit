@@ -57,10 +57,20 @@ func RenderFileView(m model.Model) string {
 		}
 	}
 
+	// Build minimal controls; extra controls go in Help view
+	controls := []string{"[↑/↓] navigate", "[space] stage/unstage", "[x] discard changes"}
+
+	if stagedCount > 0 {
+		controls = append(controls, "[c] commit")
+	}
+
+	controls = append(controls, "[?] help")
+
+	controlsLine := "  " + strings.Join(controls, "  ")
+
 	s.WriteString("\n" + styles.BorderStyle.Render(
 		styles.HelpStyle.Render("Controls:\n")+
-			styles.HelpStyle.Render("  [↑/↓] navigate  [space] stage/unstage  [a] stage all  [x] discard changes")+
-			styles.HelpStyle.Render("  [c] commit  [b] branches  [m] remotes  [p] push  [f] fetch  [l] pull  [r] refresh  [q] quit"),
+			styles.HelpStyle.Render(controlsLine),
 	))
 
 	return s.String()

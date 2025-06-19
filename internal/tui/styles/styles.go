@@ -117,10 +117,9 @@ var (
 			Foreground(lipgloss.Color(LightGray)).
 			Background(lipgloss.Color("235")).
 			Padding(0, 1).
-			Width(100) // Ajustar según el ancho de tu terminal
+			Width(100)
 
-	// Para el layout horizontal
 	MainContentStyle = lipgloss.NewStyle().
 				Width(80).
-				Height(25) // Ajustar según la altura de tu terminal
+				Height(25)
 )

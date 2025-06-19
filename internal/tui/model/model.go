@@ -17,6 +17,7 @@ const (
 	AddRemoteView
 	NewBranchView
 	ConfirmDialog
+	HelpView
 )
 
 type Model struct {
@@ -39,6 +40,7 @@ type Model struct {
 	IsPulling        bool
 	NewBranchName    string
 	HasRemoteChanges bool
+	ShowHelpPanel    bool
 
 	DialogType   string
 	DialogTarget string
@@ -70,6 +72,7 @@ func InitialModel() Model {
 		IsPulling:        false,
 		NewBranchName:    "",
 		HasRemoteChanges: hasRemoteChanges,
+		ShowHelpPanel:    false,
 		DialogType:       "",
 		DialogTarget:     "",
 	}

@@ -15,7 +15,6 @@ import (
 func Render(m model.Model) string {
 	var sb strings.Builder
 
-	// Título
 	sb.WriteString(styles.TitleStyle.Render(branding.RenderTitle()) + "\n\n")
 	sb.WriteString(fmt.Sprintf(" current branch: %s\n\n",
 		styles.HeaderStyle.Render(m.CurrentBranch),
@@ -37,9 +36,10 @@ func Render(m model.Model) string {
 		sb.WriteString(view.RenderNewBranchView(m))
 	case model.ConfirmDialog:
 		sb.WriteString(view.RenderConfirmDialog(m))
+	case model.HelpView:
+		sb.WriteString(view.RenderHelpView())
 	}
 
-	// Mensajes de estado
 	if m.Message != "" {
 		sb.WriteString("\n")
 		switch m.MessageType {

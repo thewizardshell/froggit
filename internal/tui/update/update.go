@@ -93,7 +93,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			// Allow exiting with "q" only when we are NOT in an input-focused view.
 			// When the user is typing (e.g. commit message, new branch name, adding remotes)
 			// the character should be treated as normal text instead of a quit signal.
-			if m.CurrentView == model.FileView || m.CurrentView == model.BranchView || m.CurrentView == model.RemoteView || m.CurrentView == model.ConfirmDialog {
+			if m.CurrentView == model.FileView || m.CurrentView == model.BranchView || m.CurrentView == model.RemoteView || m.CurrentView == model.ConfirmDialog || m.CurrentView == model.HelpView {
 				return m, tea.Quit
 			}
 			// Otherwise, fall through so the rune is processed as normal input.
@@ -313,11 +313,23 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					m.MessageType = "info"
 					return m, tea.Batch(performPull(), spinner())
 				}
+			case "A":
+				m.Message = "Advanced features (logs, merge, stash, rebase) are coming soon"
+				m.MessageType = "info"
+				return m, nil
 			case "x":
 				if len(m.Files) > 0 {
 					m.DialogType = "discard_changes"
 					m.DialogTarget = m.Files[m.Cursor].Name
 					m.CurrentView = model.ConfirmDialog
+				}
+			case "?":
+				if m.CurrentView == model.FileView {
+					m.CurrentView = model.HelpView
+					return m, nil
+				} else if m.CurrentView == model.HelpView {
+					m.CurrentView = model.FileView
+					return m, nil
 				}
 			}
 		}

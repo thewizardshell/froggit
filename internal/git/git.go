@@ -7,7 +7,9 @@ import (
 	"strings"
 )
 
-// FileItem representa un archivo en el repositorio
+// FileItem represents a file in the repository, including its status and staging information.
+// Name is the file path, Status indicates the Git status, Staged is true if the file is staged,
+// and Selected can be used by UI clients to mark the file.
 type FileItem struct {
 	Name     string
 	Status   string
@@ -15,40 +17,38 @@ type FileItem struct {
 	Selected bool
 }
 
-// IsGitRepository verifica si el directorio actual es un repositorio Git
+// IsGitRepository checks if the current directory is within a Git repository.
+// It runs 'git rev-parse --git-dir' and returns true if no error occurs.
 func IsGitRepository() bool {
 	_, err := exec.Command("git", "rev-parse", "--git-dir").Output()
 	return err == nil
 }
 
-// InitRepository inicializa un nuevo repositorio Git
+// InitRepository initializes a new Git repository in the current directory.
+// It runs 'git init' and returns any execution error.
 func InitRepository() error {
 	cmd := exec.Command("git", "init")
 	return cmd.Run()
 }
 
-// GetModifiedFiles obtiene la lista de archivos modificados
+// GetModifiedFiles returns a slice of FileItem for all modified files in the working tree.
+// It detects staged files via 'git diff --cached --name-status' and all changes via 'git status --porcelain'.
 func GetModifiedFiles() ([]FileItem, error) {
-	// Obtener archivos staged
-	stagedCmd := exec.Command("git", "diff", "--cached", "--name-status")
-	stagedOutput, _ := stagedCmd.Output()
+	// Map of filenames that are staged
 	stagedFiles := make(map[string]bool)
-
+	stagedOutput, _ := exec.Command("git", "diff", "--cached", "--name-status").Output()
 	if len(stagedOutput) > 0 {
 		lines := strings.Split(strings.TrimSpace(string(stagedOutput)), "\n")
 		for _, line := range lines {
-			if line != "" {
-				parts := strings.Fields(line)
-				if len(parts) >= 2 {
-					stagedFiles[parts[1]] = true
-				}
+			parts := strings.Fields(line)
+			if len(parts) >= 2 {
+				stagedFiles[parts[1]] = true
 			}
 		}
 	}
 
-	// Obtener todos los archivos modificados
-	cmd := exec.Command("git", "status", "--porcelain")
-	output, err := cmd.Output()
+	// Get status of all modified files
+	output, err := exec.Command("git", "status", "--porcelain").Output()
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +61,10 @@ func GetModifiedFiles() ([]FileItem, error) {
 				continue
 			}
 
-			// status puede estar en la primera o segunda columna
 			status := strings.TrimSpace(line[:2])
 			filename := strings.TrimSpace(line[3:])
 
-			// Algunos nombres de archivo pueden contener espacios. Usa Fields para mayor precisión.
-			// Nota: git status --porcelain v1 separa status y nombre con exactamente dos caracteres.
+			// Handle filenames containing spaces
 			if fields := strings.Fields(line); len(fields) >= 2 {
 				filename = strings.Join(fields[1:], " ")
 			}
@@ -82,17 +80,16 @@ func GetModifiedFiles() ([]FileItem, error) {
 	return files, nil
 }
 
-// GetBranches obtiene la lista de ramas y la rama actual
+// GetBranches returns a slice of branch names and the currently checked-out branch.
+// It runs 'git branch' and parses the output.
 func GetBranches() ([]string, string) {
-	cmd := exec.Command("git", "branch")
-	output, err := cmd.Output()
+	output, err := exec.Command("git", "branch").Output()
 	if err != nil {
-		return []string{}, ""
+		return nil, ""
 	}
 
 	var branches []string
 	var current string
-
 	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
@@ -107,143 +104,120 @@ func GetBranches() ([]string, string) {
 	return branches, current
 }
 
-// GetRemotes obtiene la lista de remotes configurados
+// GetRemotes retrieves configured Git remotes and their URLs.
+// It runs 'git remote -v' and returns unique remotes.
 func GetRemotes() ([]string, error) {
-	cmd := exec.Command("git", "remote", "-v")
-	output, err := cmd.Output()
+	output, err := exec.Command("git", "remote", "-v").Output()
 	if err != nil {
 		return nil, err
 	}
 
 	var remotes []string
-	if len(output) > 0 {
-		lines := strings.Split(strings.TrimSpace(string(output)), "\n")
-		seen := make(map[string]bool)
-		for _, line := range lines {
-			if line != "" {
-				parts := strings.Fields(line)
-				if len(parts) >= 2 && !seen[parts[0]] {
-					remotes = append(remotes, parts[0]+" -> "+parts[1])
-					seen[parts[0]] = true
-				}
-			}
+	seen := make(map[string]bool)
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	for _, line := range lines {
+		parts := strings.Fields(line)
+		if len(parts) >= 2 && !seen[parts[0]] {
+			remotes = append(remotes, fmt.Sprintf("%s -> %s", parts[0], parts[1]))
+			seen[parts[0]] = true
 		}
 	}
 
 	return remotes, nil
 }
 
-// Add añade un archivo al staging area
+// Add stages the specified file using 'git add'.
 func Add(filename string) error {
-	cmd := exec.Command("git", "add", filename)
-	return cmd.Run()
+	return exec.Command("git", "add", filename).Run()
 }
 
-// Reset quita un archivo del staging area
+// Reset un-stages the specified file using 'git reset HEAD'.
 func Reset(filename string) error {
-	cmd := exec.Command("git", "reset", "HEAD", filename)
-	return cmd.Run()
+	return exec.Command("git", "reset", "HEAD", filename).Run()
 }
 
-// Commit realiza un commit con el mensaje especificado
+// Commit creates a new commit with the given message using 'git commit -m'.
 func Commit(message string) error {
-	cmd := exec.Command("git", "commit", "-m", message)
-	return cmd.Run()
+	return exec.Command("git", "commit", "-m", message).Run()
 }
 
-// Push sube los cambios al repositorio remoto
+// Push sends committed changes to the remote repository using 'git push'.
 func Push() error {
-	cmd := exec.Command("git", "push")
-	return cmd.Run()
+	return exec.Command("git", "push").Run()
 }
 
-// Checkout cambia a la rama especificada
+// Checkout switches to the specified branch using 'git checkout'.
 func Checkout(branch string) error {
-	cmd := exec.Command("git", "checkout", branch)
-	return cmd.Run()
+	return exec.Command("git", "checkout", branch).Run()
 }
 
-// AddRemote añade un remote al repositorio
+// AddRemote adds a new remote with the given name and URL using 'git remote add'.
 func AddRemote(name, url string) error {
-	cmd := exec.Command("git", "remote", "add", name, url)
-	return cmd.Run()
+	return exec.Command("git", "remote", "add", name, url).Run()
 }
 
-// RemoveRemote elimina un remote del repositorio
+// RemoveRemote removes the specified remote using 'git remote remove'.
 func RemoveRemote(name string) error {
-	cmd := exec.Command("git", "remote", "remove", name)
-	return cmd.Run()
+	return exec.Command("git", "remote", "remove", name).Run()
 }
 
-// Fetch obtiene todos los cambios y ramas del repositorio remoto
+// Fetch retrieves all updates from the remote repository using 'git fetch --all'.
 func Fetch() error {
-	output, err := exec.Command("git", "fetch", "-a").CombinedOutput()
+	output, err := exec.Command("git", "fetch", "--all").CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("error al hacer fetch: %v - %s", err, string(output))
+		return fmt.Errorf("fetch failed: %v - %s", err, string(output))
 	}
 	return nil
 }
 
-// Pull obtiene e integra los cambios del repositorio remoto
+// Pull fetches and integrates changes from the remote repository using 'git pull'.
 func Pull() error {
 	output, err := exec.Command("git", "pull").CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("error al hacer pull: %v - %s", err, string(output))
+		return fmt.Errorf("pull failed: %v - %s", err, string(output))
 	}
 	return nil
 }
 
-// CreateBranch crea una nueva rama
+// CreateBranch creates and checks out a new branch using 'git checkout -b'.
 func CreateBranch(name string) error {
-	cmd := exec.Command("git", "checkout", "-b", name)
-	return cmd.Run()
+	return exec.Command("git", "checkout", "-b", name).Run()
 }
 
-// DeleteBranch elimina una rama
+// DeleteBranch deletes the specified branch using 'git branch -d'.
 func DeleteBranch(name string) error {
-	cmd := exec.Command("git", "branch", "-d", name)
-	return cmd.Run()
+	return exec.Command("git", "branch", "-d", name).Run()
 }
 
-// DiscardChanges descarta los cambios de un archivo
+// DiscardChanges reverts changes to the specified file.
+// If the file is untracked, it is removed; otherwise, changes are reset using 'git checkout --'.
 func DiscardChanges(filename string) error {
-	// Verificar si el archivo está siendo rastreado por Git
-	checkTracked := exec.Command("git", "ls-files", "--error-unmatch", filename)
-	if err := checkTracked.Run(); err != nil {
-		// El archivo NO está siendo rastreado, lo eliminamos
-		fmt.Println("Archivo NO rastreado, intentando eliminar:", filename)
-		if err := os.Remove(filename); err != nil {
-			return fmt.Errorf("no se pudo eliminar archivo no rastreado: %w", err)
+	// Check if file is tracked
+	if err := exec.Command("git", "ls-files", "--error-unmatch", filename).Run(); err != nil {
+		// File is untracked: remove it
+		if removeErr := os.Remove(filename); removeErr != nil {
+			return fmt.Errorf("failed to remove untracked file: %w", removeErr)
 		}
-		fmt.Println("Archivo eliminado correctamente")
 		return nil
 	}
 
-	// El archivo está rastreado, se descartan los cambios
-	fmt.Println("Archivo rastreado, descartando cambios con git checkout")
-	discard := exec.Command("git", "checkout", "--", filename)
-	if err := discard.Run(); err != nil {
-		return fmt.Errorf("error al descartar cambios con git: %w", err)
+	// File is tracked: discard changes
+	if err := exec.Command("git", "checkout", "--", filename).Run(); err != nil {
+		return fmt.Errorf("failed to discard changes: %w", err)
 	}
-
-	fmt.Println("Cambios descartados correctamente")
 	return nil
 }
 
-// HasRemoteChanges verifica si hay commits pendientes de pull desde el remoto
+// HasRemoteChanges checks if the local branch is behind its remote counterpart.
+// It fetches updates and counts commits between HEAD and origin/branch.
 func HasRemoteChanges(branch string) (bool, error) {
-	// Ejecuta git fetch para actualizar refs
-	err := Fetch()
+	if err := Fetch(); err != nil {
+		return false, err
+	}
+	output, err := exec.Command("git", "rev-list", "--count", fmt.Sprintf("HEAD..origin/%s", branch)).Output()
 	if err != nil {
 		return false, err
 	}
-
-	cmd := exec.Command("git", "rev-list", "--count", fmt.Sprintf("HEAD..origin/%s", branch))
-	output, err := cmd.Output()
-	if err != nil {
-		return false, err
-	}
-
 	count := strings.TrimSpace(string(output))
 	return count != "0", nil
 }
