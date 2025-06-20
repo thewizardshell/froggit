@@ -10,8 +10,6 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/🛠%20Build-Passing-1e8449?style=flat-square" alt="Build Status" />
-  <img src="https://img.shields.io/badge/📦%20Latest-v1.0.0-2ecc71?style=flat-square" alt="Latest Release" />
   <img src="https://img.shields.io/badge/💻%20Platforms-Windows%20%7C%20Linux%20%7C%20macOS-27ae60?style=flat-square" alt="Supported Platforms" />
   <img src="https://img.shields.io/badge/⚙️%20Go-1.20%2B-145a32?style=flat-square" alt="Go Version" />
 </p>
