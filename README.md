@@ -28,6 +28,9 @@
 
 ## ⚡️ Quick Start
 
+![preview_short_froggit](https://github.com/user-attachments/assets/7b5a2dd6-fbc3-4035-83fe-a072d2298f57)
+
+
 ### Linux / macOS
 
 ```bash
