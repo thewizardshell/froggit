@@ -59,7 +59,7 @@ if [[ "$OS" == "windows" ]]; then
   read -r answer
   if [[ "$answer" =~ ^[Yy]$ ]]; then
     loading "Running PowerShell installer"
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "iwr -useb https://raw.githubusercontent.com/thewizardshell/froggit/main/scripts/install.ps1 | iex"
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "iwr -useb https://raw.githubusercontent.com/thewizardshell/froggit/master/scripts/install.ps1 | iex"
   else
     echo "Installation cancelled by user."
   fi
