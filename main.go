@@ -42,6 +42,7 @@ Keyboard Shortcuts:
     r: Add remote
     p: Push changes
     l: Pull changes
+    L: Show log graph
     esc: Go back/cancel
     enter: Confirm/execute
 `

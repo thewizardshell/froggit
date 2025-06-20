@@ -4,6 +4,7 @@ package update
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"froggit/internal/git"
@@ -200,6 +201,10 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					if m.Cursor < len(m.Remotes)-1 {
 						m.Cursor++
 					}
+				case model.LogGraphView:
+					if m.Cursor < len(m.LogLines)-1 {
+						m.Cursor++
+					}
 				}
 			}
 			return m, nil
@@ -313,6 +318,19 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					m.MessageType = "info"
 					return m, tea.Batch(performPull(), spinner())
 				}
+			case "L":
+				// Open interactive Git log graph view
+				graph, err := git.LogsGraph()
+				if err != nil {
+					m.Message = fmt.Sprintf("✗ Error retrieving log graph: %s", err)
+					m.MessageType = "error"
+				} else {
+					m.LogLines = strings.Split(strings.TrimSpace(graph), "\n")
+					m.Cursor = 0
+					m.CurrentView = model.LogGraphView
+					m.Message = ""
+				}
+				return m, nil
 			case "A":
 				m.Message = "Advanced features (logs, merge, stash, rebase) are coming soon"
 				m.MessageType = "info"
@@ -332,6 +350,11 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					return m, nil
 				}
 			}
+		}
+
+		if m.CurrentView == model.LogGraphView && msg.String() == "esc" {
+			m.CurrentView = model.FileView
+			return m, nil
 		}
 
 	case spinnerTickMsg:

@@ -221,3 +221,11 @@ func HasRemoteChanges(branch string) (bool, error) {
 	count := strings.TrimSpace(string(output))
 	return count != "0", nil
 }
+
+func LogsGraph() (string, error) {
+	output, err := exec.Command("git", "log", "--graph", "--oneline", "--all").Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to get logs: %w", err)
+	}
+	return string(output), nil
+}

@@ -71,6 +71,14 @@ var (
 			Foreground(lipgloss.Color(Green)).
 			Bold(true)
 
+	// Log graph specific styles
+	GraphSymbolStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("214")) // orange-ish
+
+	CommitHashStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("81")).
+			Bold(true)
+
 	ControlTitleStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(Green)).
 				Bold(true).

@@ -18,6 +18,7 @@ const (
 	NewBranchView
 	ConfirmDialog
 	HelpView
+	LogGraphView
 )
 
 type Model struct {
@@ -41,6 +42,9 @@ type Model struct {
 	NewBranchName    string
 	HasRemoteChanges bool
 	ShowHelpPanel    bool
+
+	// LogsGraph data
+	LogLines []string
 
 	DialogType   string
 	DialogTarget string
@@ -73,6 +77,7 @@ func InitialModel() Model {
 		NewBranchName:    "",
 		HasRemoteChanges: hasRemoteChanges,
 		ShowHelpPanel:    false,
+		LogLines:         []string{},
 		DialogType:       "",
 		DialogTarget:     "",
 	}
