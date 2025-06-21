@@ -11,7 +11,7 @@ import (
 // RenderLogGraphView renders the interactive git log graph.
 // It highlights the currently selected commit line.
 func RenderLogGraphView(m model.Model) string {
-	const viewport = 20 // number of lines to show at once
+	const viewport = 15 // number of lines to show at once
 
 	var sb strings.Builder
 

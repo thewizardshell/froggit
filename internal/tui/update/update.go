@@ -4,7 +4,6 @@ package update
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"froggit/internal/git"
@@ -53,6 +52,10 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
+		if m.CurrentView == model.LogGraphView {
+			return HandleLogGraphKey(m, msg)
+		}
+
 		if m.CurrentView == model.ConfirmDialog {
 			switch msg.String() {
 			case "y":
@@ -91,13 +94,9 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "q":
-			// Allow exiting with "q" only when we are NOT in an input-focused view.
-			// When the user is typing (e.g. commit message, new branch name, adding remotes)
-			// the character should be treated as normal text instead of a quit signal.
 			if m.CurrentView == model.FileView || m.CurrentView == model.BranchView || m.CurrentView == model.RemoteView || m.CurrentView == model.ConfirmDialog || m.CurrentView == model.HelpView {
 				return m, tea.Quit
 			}
-			// Otherwise, fall through so the rune is processed as normal input.
 
 		case "esc":
 			if m.CurrentView != model.FileView {
@@ -202,9 +201,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						m.Cursor++
 					}
 				case model.LogGraphView:
-					if m.Cursor < len(m.LogLines)-1 {
-						m.Cursor++
-					}
 				}
 			}
 			return m, nil
@@ -320,17 +316,9 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				}
 			case "L":
 				// Open interactive Git log graph view
-				graph, err := git.LogsGraph()
-				if err != nil {
-					m.Message = fmt.Sprintf("✗ Error retrieving log graph: %s", err)
-					m.MessageType = "error"
-				} else {
-					m.LogLines = strings.Split(strings.TrimSpace(graph), "\n")
-					m.Cursor = 0
-					m.CurrentView = model.LogGraphView
-					m.Message = ""
-				}
-				return m, nil
+				m, cmd := OpenLogGraphView(m)
+				return m, cmd
+
 			case "A":
 				m.Message = "Advanced features (logs, merge, stash, rebase) are coming soon"
 				m.MessageType = "info"
@@ -350,11 +338,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					return m, nil
 				}
 			}
-		}
-
-		if m.CurrentView == model.LogGraphView && msg.String() == "esc" {
-			m.CurrentView = model.FileView
-			return m, nil
 		}
 
 	case spinnerTickMsg:
@@ -404,3 +387,4 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 func isPrintableChar(r rune) bool {
 	return (r >= 32 && r <= 126) || (r >= 128 && r <= 255)
 }
+
