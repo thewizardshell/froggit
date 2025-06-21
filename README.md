@@ -29,17 +29,19 @@ cd froggit
 go build
 
 # Run
-froggit
+./froggit
 ```
 
 ## 🎯 Features
 
 - 📁 **Visual File Management**
+
   - Stage/unstage files with visual feedback
   - Bulk actions for multiple files
   - Real-time status updates
 
 - 🌿 **Branch Operations**
+
   - Create and switch branches
   - Delete branches safely
   - Visual branch selection
@@ -52,11 +54,13 @@ froggit
 ## ⌨️ Keyboard Shortcuts
 
 ### Global
+
 - `q` or `Ctrl+C` - Quit
 - `Esc` - Go back/cancel
 - `?` - Show help
 
 ### File View
+
 - `↑/↓` - Navigate files
 - `Space` - Stage/unstage file
 - `a` - Stage all files
@@ -64,12 +68,14 @@ froggit
 - `x` - Discard changes
 
 ### Branch Management
+
 - `b` - Enter branch view
 - `n` - Create new branch
 - `d` - Delete branch
 - `Enter` - Switch to branch
 
 ### Repository Actions
+
 - `p` - Push changes
 - `f` - Fetch updates
 - `l` - Pull changes
@@ -100,11 +106,12 @@ MIT License - see [LICENSE](LICENSE) for details
 **Vicente Roa** ([@thewizardshell](https://github.com/thewizardshell))
 
 # 🔗 Related Tools and Alternatives
+
 While Froggit is designed to be a minimal and beginner-friendly Git TUI, there are several excellent tools out there that offer more advanced features or different workflows. Depending on your needs, you might want to explore them as well:
 
 - LazyGit: A powerful and widely-used Git TUI, great for intermediate and advanced users: https://github.com/jesseduffield/lazygit.
 - GitKraken: A GUI Git client with a rich graphical interface: https://www.gitkraken.com/.
 - tig : Text-mode interface for Git, useful for browsing history and commits: https://github.com/jonas/tig.
 - Magit: An interface to Git for Emacs users, highly customizable and powerful: https://github.com/magit/magit.
-  
+
 Froggit aims to serve as a stepping stone — especially for those new to Git or who prefer simplicity over complexity. Feel free to try different tools and find what works best for your workflow!
