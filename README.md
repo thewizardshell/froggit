@@ -30,6 +30,7 @@
 
 ![preview_short_froggit](https://github.com/user-attachments/assets/7b5a2dd6-fbc3-4035-83fe-a072d2298f57)
 
+# Install the latest release
 
 ### Linux / macOS
 
@@ -43,27 +44,18 @@ curl -s https://raw.githubusercontent.com/thewizardshell/froggit/master/scripts/
 iwr https://raw.githubusercontent.com/thewizardshell/froggit/master/scripts/install.ps1 -UseBasicParsing | iex
 ```
 
-> ✅ These scripts will:
->
-> - Detect your OS and architecture
-> - Move it to a folder in your system PATH (e.g. `/usr/local/bin` or `C:\tools\froggit`)
-
-Once installed, run:
-
-```bash
-froggit
-```
-
 ---
 
-### Manual Build
+### Build from source (latest development version)
 
 ```bash
+# Install
 git clone https://github.com/thewizardshell/froggit.git
 cd froggit
-go mod tidy
-go build -o froggit
-sudo mv froggit /usr/local/bin/
+go build
+
+# Run
+./froggit
 ```
 
 ---
@@ -153,6 +145,3 @@ Froggit is built for simplicity, but there are many excellent Git tools worth ex
 **Vicente Roa**  
 GitHub: [@thewizardshell](https://github.com/thewizardshell)
 
-## License
-
-This project is licensed under the [MIT License](LICENSE).
