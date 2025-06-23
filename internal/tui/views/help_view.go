@@ -19,6 +19,7 @@ func RenderHelpView() string {
 		"[p] push",
 		"[f] fetch",
 		"[l] pull (only when remote changes)",
+		"[L] log graph",
 		"[r] refresh",
 		"[A] advanced (logs, merge, stash, rebase)",
 		"[q] quit",

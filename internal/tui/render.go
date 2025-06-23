@@ -38,6 +38,8 @@ func Render(m model.Model) string {
 		sb.WriteString(view.RenderConfirmDialog(m))
 	case model.HelpView:
 		sb.WriteString(view.RenderHelpView())
+	case model.LogGraphView:
+		sb.WriteString(view.RenderLogGraphView(m))
 	}
 
 	if m.Message != "" {
