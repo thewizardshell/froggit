@@ -93,12 +93,20 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 
-		case "q":
-			if m.CurrentView == model.FileView || m.CurrentView == model.BranchView || m.CurrentView == model.RemoteView || m.CurrentView == model.ConfirmDialog || m.CurrentView == model.HelpView {
-				return m, tea.Quit
+		case "A", "a":
+			if m.CurrentView == model.FileView && !m.AdvancedMode {
+				m.AdvancedMode = true
+				return m, nil
 			}
 
 		case "esc":
+			if m.AdvancedMode {
+				m.AdvancedMode = false
+				if m.CurrentView == model.LogGraphView {
+					m.CurrentView = model.FileView
+				}
+				return m, nil
+			}
 			if m.CurrentView != model.FileView {
 				m.CurrentView = model.FileView
 				m.CommitMsg = ""
@@ -109,6 +117,11 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.MessageType = ""
 			}
 			return m, nil
+
+		case "q":
+			if m.CurrentView == model.FileView || m.CurrentView == model.BranchView || m.CurrentView == model.RemoteView || m.CurrentView == model.ConfirmDialog || m.CurrentView == model.HelpView {
+				return m, tea.Quit
+			}
 
 		case "enter":
 			switch m.CurrentView {
@@ -387,4 +400,3 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 func isPrintableChar(r rune) bool {
 	return (r >= 32 && r <= 126) || (r >= 128 && r <= 255)
 }
-

@@ -42,6 +42,7 @@ type Model struct {
 	NewBranchName    string
 	HasRemoteChanges bool
 	ShowHelpPanel    bool
+	AdvancedMode     bool
 
 	// LogsGraph data
 	LogLines []string
@@ -80,6 +81,7 @@ func InitialModel() Model {
 		LogLines:         []string{},
 		DialogType:       "",
 		DialogTarget:     "",
+		AdvancedMode:     false,
 	}
 }
 
