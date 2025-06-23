@@ -17,8 +17,7 @@ EOF
 echo -e "\033[0m"
 
 # Ask user before continuing (especially important for Windows users)
-echo -n "Do you want to continue with the installation? (y/n): "
-read -r answer
+read -r -p "Do you want to continue? [y/N] " answer < /dev/tty
 if [[ ! "$answer" =~ ^[Yy]$ ]]; then
   echo "Installation cancelled by user."
   exit 0
