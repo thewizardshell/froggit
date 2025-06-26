@@ -93,9 +93,21 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		case "ctrl+c":
 			return m, tea.Quit
 
-		case "A", "a":
+		case "A":
 			if m.CurrentView == model.FileView && !m.AdvancedMode {
 				m.AdvancedMode = true
+				return m, nil
+			}
+		case "a":
+			if m.CurrentView == model.FileView && !m.AdvancedMode {
+				for i := range m.Files {
+					if !m.Files[i].Staged {
+						m.Files[i].Staged = true
+						git.Add(m.Files[i].Name)
+					}
+				}
+				m.Message = "✓ All files added to stage"
+				m.MessageType = "success"
 				return m, nil
 			}
 
