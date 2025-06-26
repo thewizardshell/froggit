@@ -86,14 +86,41 @@ func InitialModel() Model {
 }
 
 func (m *Model) RefreshData() {
-	files, _ := git.GetModifiedFiles()
-	branches, current := git.GetBranches()
-	remotes, _ := git.GetRemotes()
-	hasRemoteChanges, _ := git.HasRemoteChanges(current)
+	// Use goroutines to fetch data in parallel
+	filesCh := make(chan []git.FileItem)
+	branchesCh := make(chan []string)
+	currentCh := make(chan string)
+	remotesCh := make(chan []string)
+	hasRemoteChangesCh := make(chan bool)
 
-	m.Files = files
+	// Files
+	go func() {
+		files, _ := git.GetModifiedFiles()
+		filesCh <- files
+	}()
+	// Branches and current branch
+	go func() {
+		branches, current := git.GetBranches()
+		branchesCh <- branches
+		currentCh <- current
+	}()
+	// Remotes
+	go func() {
+		remotes, _ := git.GetRemotes()
+		remotesCh <- remotes
+	}()
+
+	// Wait for branches to get current branch, then check remote changes
+	branches := <-branchesCh
+	current := <-currentCh
+	go func() {
+		hasRemoteChanges, _ := git.HasRemoteChanges(current)
+		hasRemoteChangesCh <- hasRemoteChanges
+	}()
+
+	m.Files = <-filesCh
 	m.Branches = branches
-	m.Remotes = remotes
+	m.Remotes = <-remotesCh
 	m.CurrentBranch = current
-	m.HasRemoteChanges = hasRemoteChanges
+	m.HasRemoteChanges = <-hasRemoteChangesCh
 }
