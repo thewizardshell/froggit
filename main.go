@@ -95,24 +95,10 @@ func main() {
 	}
 
 	if !git.IsGitRepository() {
-		fmt.Println("🔧 You are not in a Git repository.")
-		fmt.Print("Do you want to initialize a Git repository here? (y/n): ")
-
-		var resp string
-		fmt.Scanln(&resp)
-		if resp == "y" || resp == "Y" || resp == "yes" {
-			if err := git.InitRepository(); err != nil {
-				fmt.Printf("❌ Failed to initialize Git repository: %s\n", err)
-				os.Exit(1)
-			}
-			fmt.Println("✅ Git repository successfully initialized.")
-		} else {
-			fmt.Println("👋 Exiting...")
-			os.Exit(0)
-		}
+		tui.QuickStartFlow()
 	}
 
-	app := App{m: model.InitialModel()}
+	app := tui.App{M: model.InitialModel()}
 
 	p := tea.NewProgram(app, tea.WithAltScreen())
 	if err := p.Start(); err != nil {

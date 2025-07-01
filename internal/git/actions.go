@@ -35,6 +35,54 @@ func (g *GitClient) Commit(message string) error {
 	return err
 }
 
+func Merge(branch string) error {
+	return NewGitClient("").Merge(branch)
+}
+
+func (g *GitClient) Merge(branch string) error {
+	_, err := g.runGitCommandCombinedOutput("merge", branch)
+	return err
+}
+
+func Rebase(branch string) error {
+	return NewGitClient("").Rebase(branch)
+}
+
+func (g *GitClient) Rebase(branch string) error {
+	_, err := g.runGitCommandCombinedOutput("rebase", branch)
+	return err
+}
+
+func SaveStash(message string) error {
+	return NewGitClient("").SaveStash(message)
+}
+
+func (g *GitClient) SaveStash(message string) error {
+	_, err := g.runGitCommandCombinedOutput("stash", "push", "-m", message)
+	return err
+}
+
+func StashPop() error {
+	return NewGitClient("").StashPop()
+}
+
+func (g *GitClient) StashPop() error {
+	_, err := g.runGitCommandCombinedOutput("stash", "pop")
+	return err
+}
+
+func StashList() (string, error) {
+	return NewGitClient("").StashList()
+}
+
+func (g *GitClient) StashList() (string, error) {
+	output, err := g.runGitCommand("stash", "list")
+	if err != nil {
+		return "", fmt.Errorf("failed to list stashes: %w", err)
+	}
+	return string(output), nil
+}
+
 // HasRemoteChanges checks if local branch is behind remote
 func HasRemoteChanges(branch string) (bool, error) {
 	return NewGitClient("").HasRemoteChanges(branch)
@@ -66,4 +114,3 @@ func (g *GitClient) LogsGraph() (string, error) {
 	}
 	return string(output), nil
 }
-

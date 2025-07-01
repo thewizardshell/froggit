@@ -40,6 +40,12 @@ func Render(m model.Model) string {
 		sb.WriteString(view.RenderHelpView())
 	case model.LogGraphView:
 		sb.WriteString(view.RenderLogGraphView(m))
+	case model.RepositoryListView:
+		sb.WriteString(view.RenderRepositoryListView(m))
+	case model.ConfirmCloneRepoView:
+		sb.WriteString(view.RenderConfirmCloneRepoView(m))
+	case model.GitHubControlsView:
+		sb.WriteString(view.RenderGitHubControlsView())
 	}
 
 	if m.Message != "" {

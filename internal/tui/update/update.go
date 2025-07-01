@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"froggit/internal/gh"
 	"froggit/internal/git"
 	"froggit/internal/tui/model"
 
@@ -46,12 +47,74 @@ func performPull() tea.Cmd {
 	}
 }
 
+var ghClient = gh.NewGhClient() // Puedes mover esto a otro lado si prefieres
+
+// GetGhClient returns the shared GitHub client instance
+func GetGhClient() *gh.GhClient {
+	return ghClient
+}
+
 // Update handles Bubble Tea messages and returns the updated model
 // along with the next command to execute.
 func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
+	// --- Confirm Clone Repo Dialog ---
+	if m.CurrentView == model.ConfirmCloneRepoView {
+		if key, ok := msg.(tea.KeyMsg); ok {
+			switch key.String() {
+			case "y":
+				if m.RepoToClone != nil {
+					repo := m.RepoToClone
+					repoFullName := repo.Owner.Login + "/" + repo.Name
+					err := gh.CloneRepository(ghClient, repoFullName, "")
+					if err != nil {
+						m.Message = "✗ Error al clonar: " + err.Error()
+						m.MessageType = "error"
+					} else {
+						m.Message = "✓ Repositorio clonado exitosamente"
+						m.MessageType = "success"
+					}
+				}
+				m.CurrentView = model.RepositoryListView
+				m.RepoToClone = nil
+				return m, nil
+			case "n", "esc":
+				m.CurrentView = model.RepositoryListView
+				m.RepoToClone = nil
+				return m, nil
+			}
+		}
+	}
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
+		// --- GitHub Controls eliminados del flujo principal ---
+		// La vista de repositorios solo se accede al inicio si no hay git init
+
+		// --- Repository List Navigation ---
+		if m.CurrentView == model.RepositoryListView {
+			switch msg.String() {
+			case "up":
+				if m.SelectedRepoIndex > 0 {
+					m.SelectedRepoIndex--
+				}
+				return m, nil
+			case "down":
+				if m.SelectedRepoIndex < len(m.Repositories)-1 {
+					m.SelectedRepoIndex++
+				}
+				return m, nil
+			case "esc":
+				m.CurrentView = model.GitHubControlsView
+				return m, nil
+			case "c":
+				if len(m.Repositories) > 0 {
+					m.RepoToClone = &m.Repositories[m.SelectedRepoIndex]
+					m.CurrentView = model.ConfirmCloneRepoView
+				}
+				return m, nil
+			}
+		}
+
 		if m.CurrentView == model.LogGraphView {
 			return HandleLogGraphKey(m, msg)
 		}

@@ -4,6 +4,7 @@
 package model
 
 import (
+	"froggit/internal/gh"
 	"froggit/internal/git"
 )
 
@@ -19,6 +20,9 @@ const (
 	ConfirmDialog
 	HelpView
 	LogGraphView
+	RepositoryListView
+	ConfirmCloneRepoView
+	GitHubControlsView
 )
 
 type Model struct {
@@ -46,6 +50,11 @@ type Model struct {
 
 	// LogsGraph data
 	LogLines []string
+
+	// Repositories
+	Repositories      []gh.Repository
+	SelectedRepoIndex int
+	RepoToClone       *gh.Repository
 
 	DialogType   string
 	DialogTarget string
