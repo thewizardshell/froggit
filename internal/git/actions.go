@@ -142,3 +142,15 @@ func MergeAbort() error {
 	_, err := NewGitClient("").runGitCommandCombinedOutput("merge", "--abort")
 	return err
 }
+
+// RebaseContinue runs git rebase --continue
+func RebaseContinue() error {
+	_, err := NewGitClient("").runGitCommandCombinedOutput("rebase", "--continue")
+	return err
+}
+
+// RebaseAbort runs git rebase --abort
+func RebaseAbort() error {
+	_, err := NewGitClient("").runGitCommandCombinedOutput("rebase", "--abort")
+	return err
+}

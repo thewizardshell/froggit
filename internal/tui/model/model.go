@@ -69,6 +69,9 @@ type Model struct {
 
 	DialogType   string
 	DialogTarget string
+
+	// Awaiting push after merge/rebase
+	AwaitingPush bool
 }
 
 func InitialModel() Model {
@@ -102,6 +105,7 @@ func InitialModel() Model {
 		DialogType:       "",
 		DialogTarget:     "",
 		AdvancedMode:     false,
+		AwaitingPush:     false,
 	}
 }
 

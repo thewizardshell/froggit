@@ -18,6 +18,12 @@ type pushMsg struct{ err error }
 type fetchMsg struct{ err error }
 type pullMsg struct{ err error }
 type spinnerTickMsg struct{}
+type switchBranchMsg struct {
+	err          error
+	targetBranch string
+	nextAction   string // "merge" or "rebase"
+	sourceBranch string
+}
 
 // spinner returns a Cmd that emits spinnerTickMsg every 100ms.
 func spinner() tea.Cmd {
@@ -44,6 +50,32 @@ func performFetch() tea.Cmd {
 func performPull() tea.Cmd {
 	return func() tea.Msg {
 		return pullMsg{err: git.Pull()}
+	}
+}
+
+// performSwitchAndMerge switches to target branch and then merges source branch
+func performSwitchAndMerge(targetBranch, sourceBranch string) tea.Cmd {
+	return func() tea.Msg {
+		err := git.Checkout(targetBranch)
+		return switchBranchMsg{
+			err:          err,
+			targetBranch: targetBranch,
+			nextAction:   "merge",
+			sourceBranch: sourceBranch,
+		}
+	}
+}
+
+// performSwitchAndRebase switches to source branch and then rebases onto target
+func performSwitchAndRebase(sourceBranch, targetBranch string) tea.Cmd {
+	return func() tea.Msg {
+		err := git.Checkout(sourceBranch)
+		return switchBranchMsg{
+			err:          err,
+			targetBranch: targetBranch,
+			nextAction:   "rebase",
+			sourceBranch: sourceBranch,
+		}
 	}
 }
 
@@ -84,7 +116,67 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			}
 		}
 	}
+
 	switch msg := msg.(type) {
+
+	case switchBranchMsg:
+		if msg.err != nil {
+			m.Message = fmt.Sprintf("✗ Error switching to branch %s: %s", msg.targetBranch, msg.err)
+			m.MessageType = "error"
+			return m, nil
+		}
+
+		// Update current branch
+		m.CurrentBranch = msg.targetBranch
+		m.RefreshData()
+
+		if msg.nextAction == "merge" {
+			// Now perform the merge
+			err := git.Merge(msg.sourceBranch)
+			if err != nil {
+				m.Message = fmt.Sprintf("✗ Error merging %s into %s: %s", msg.sourceBranch, msg.targetBranch, err)
+				m.MessageType = "error"
+				return m, nil
+			}
+
+			conflicts, _ := git.GetConflictFiles()
+			if len(conflicts) > 0 {
+				m.LogLines = conflicts
+				m.Message = fmt.Sprintf("Conflicts detected while merging %s into %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.sourceBranch, msg.targetBranch)
+				m.MessageType = "warning"
+				return m, nil
+			} else {
+				m.Message = fmt.Sprintf("✓ Successfully merged %s into %s. Press [P] to push to remote.", msg.sourceBranch, msg.targetBranch)
+				m.MessageType = "success"
+				m.CurrentView = model.MergeView
+				m.AwaitingPush = true
+				return m, nil
+			}
+		} else if msg.nextAction == "rebase" {
+			// Now perform the rebase
+			err := git.Rebase(msg.targetBranch)
+			if err != nil {
+				m.Message = fmt.Sprintf("✗ Error rebasing %s onto %s: %s", msg.sourceBranch, msg.targetBranch, err)
+				m.MessageType = "error"
+				return m, nil
+			}
+
+			conflicts, _ := git.GetConflictFiles()
+			if len(conflicts) > 0 {
+				m.LogLines = conflicts
+				m.Message = fmt.Sprintf("Conflicts detected while rebasing %s onto %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.sourceBranch, msg.targetBranch)
+				m.MessageType = "warning"
+				return m, nil
+			} else {
+				m.Message = fmt.Sprintf("✓ Successfully rebased %s onto %s", msg.sourceBranch, msg.targetBranch)
+				m.MessageType = "success"
+				m.CurrentView = model.FileView
+				m.DialogTarget = ""
+				m.LogLines = nil
+				m.RefreshData()
+				return m, nil
+			}
+		}
 
 	case tea.KeyMsg:
 		// --- GitHub Controls removed from main flow ---
@@ -132,43 +224,92 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					m.Cursor++
 				}
 				return m, nil
-			case " ", "space": // Accept both space and "space"
+			case " ", "space":
 				if len(m.Branches) > 0 && m.Cursor < len(m.Branches) {
 					selected := m.Branches[m.Cursor]
+					if selected == m.CurrentBranch {
+						m.Message = "⚠ Cannot merge a branch into itself"
+						m.MessageType = "warning"
+						return m, nil
+					}
 					if m.DialogTarget == selected {
 						m.DialogTarget = "" // unselect if already selected
 						m.Message = "Selection unmarked"
 						m.MessageType = "info"
 					} else {
 						m.DialogTarget = selected
-						m.Message = fmt.Sprintf("Branch selected for merge: %s", m.DialogTarget)
-						m.MessageType = "success"
+						m.Message = fmt.Sprintf("Will merge %s into %s (current: %s)", m.CurrentBranch, selected, m.CurrentBranch)
+						m.MessageType = "info"
 					}
 				}
 				return m, nil
-			case "M", "m": // Allow both uppercase and lowercase
+			case "M", "m":
 				if m.DialogTarget != "" {
-					err := git.Merge(m.DialogTarget)
-					if err != nil {
-						m.Message = fmt.Sprintf("✗ Error merging: %s", err)
-						m.MessageType = "error"
-					} else {
-						m.Message = fmt.Sprintf("✓ Merge with %s successful", m.DialogTarget)
-						m.MessageType = "success"
-						m.CurrentView = model.FileView
-						m.DialogTarget = ""
-						m.RefreshData()
+					if m.DialogTarget == m.CurrentBranch {
+						m.Message = "⚠ Cannot merge a branch into itself"
+						m.MessageType = "warning"
+						return m, nil
 					}
+
+					// Show clear message about what will happen
+					m.Message = fmt.Sprintf("Switching to %s and merging %s into it...", m.DialogTarget, m.CurrentBranch)
+					m.MessageType = "info"
+
+					// Switch to target branch and then merge current branch into it
+					return m, performSwitchAndMerge(m.DialogTarget, m.CurrentBranch)
 				} else {
-					m.Message = "Select a branch to merge by pressing space"
+					m.Message = "Select a target branch first by pressing space"
 					m.MessageType = "warning"
+					return m, nil
 				}
-				return m, nil
+			case "P", "p":
+				if m.AwaitingPush {
+					m.Message = "Pushing..."
+					m.MessageType = "info"
+					m.AwaitingPush = false
+					return m, tea.Batch(performPush(), spinner())
+				}
+				if len(m.LogLines) > 0 {
+					err := git.MergeContinue()
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error continuing merge: %s", err)
+						m.MessageType = "error"
+						return m, nil
+					}
+					conflicts, _ := git.GetConflictFiles()
+					if len(conflicts) > 0 {
+						m.LogLines = conflicts
+						m.Message = "Conflicts still present. Please resolve all conflicts."
+						m.MessageType = "warning"
+						return m, nil
+					}
+					m.Message = "✓ Merge completed successfully. Press [P] to push to remote."
+					m.MessageType = "success"
+					m.AwaitingPush = true
+					return m, nil
+				}
+			case "X", "x":
+				if len(m.LogLines) > 0 {
+					err := git.MergeAbort()
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error aborting merge: %s", err)
+						m.MessageType = "error"
+						return m, nil
+					}
+					m.Message = "Merge aborted."
+					m.MessageType = "info"
+					m.CurrentView = model.FileView
+					m.DialogTarget = ""
+					m.LogLines = nil
+					m.RefreshData()
+					return m, nil
+				}
 			case "esc":
 				m.CurrentView = model.FileView
 				m.DialogTarget = ""
 				m.Message = ""
 				m.Cursor = 0
+				m.LogLines = nil
 				return m, nil
 			}
 		}
@@ -186,43 +327,108 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					m.Cursor++
 				}
 				return m, nil
-			case " ", "space": // Accept both space and "space"
+			case " ", "space":
 				if len(m.Branches) > 0 && m.Cursor < len(m.Branches) {
 					selected := m.Branches[m.Cursor]
+					if selected == m.CurrentBranch {
+						m.Message = "⚠ Cannot rebase a branch onto itself"
+						m.MessageType = "warning"
+						return m, nil
+					}
 					if m.DialogTarget == selected {
 						m.DialogTarget = "" // unselect if already selected
 						m.Message = "Selection unmarked"
 						m.MessageType = "info"
 					} else {
 						m.DialogTarget = selected
-						m.Message = fmt.Sprintf("Branch selected for rebase: %s", m.DialogTarget)
-						m.MessageType = "success"
+						m.Message = fmt.Sprintf("Will rebase %s onto %s", m.CurrentBranch, selected)
+						m.MessageType = "info"
 					}
 				}
 				return m, nil
-			case "R", "r": // Allow both uppercase and lowercase
+			case "R", "r":
 				if m.DialogTarget != "" {
+					if m.DialogTarget == m.CurrentBranch {
+						m.Message = "⚠ Cannot rebase a branch onto itself"
+						m.MessageType = "warning"
+						return m, nil
+					}
+
+					// For rebase, we stay on current branch and rebase onto target
+					m.Message = fmt.Sprintf("Rebasing %s onto %s...", m.CurrentBranch, m.DialogTarget)
+					m.MessageType = "info"
+
 					err := git.Rebase(m.DialogTarget)
 					if err != nil {
 						m.Message = fmt.Sprintf("✗ Error rebasing: %s", err)
 						m.MessageType = "error"
+						return m, nil
+					}
+					conflicts, _ := git.GetConflictFiles()
+					if len(conflicts) > 0 {
+						m.LogLines = conflicts
+						m.Message = "Conflicts detected. Please resolve them and use [P] Proceed or [X] Cancel."
+						m.MessageType = "warning"
+						return m, nil
 					} else {
-						m.Message = fmt.Sprintf("✓ Rebase with %s successful", m.DialogTarget)
+						m.Message = fmt.Sprintf("✓ Rebase of %s onto %s successful", m.CurrentBranch, m.DialogTarget)
 						m.MessageType = "success"
 						m.CurrentView = model.FileView
 						m.DialogTarget = ""
+						m.LogLines = nil
 						m.RefreshData()
+						return m, nil
 					}
 				} else {
-					m.Message = "Select a branch to rebase by pressing space"
+					m.Message = "Select a target branch first by pressing space"
 					m.MessageType = "warning"
+					return m, nil
 				}
-				return m, nil
+			case "P", "p":
+				if len(m.LogLines) > 0 {
+					err := git.RebaseContinue()
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error continuing rebase: %s", err)
+						m.MessageType = "error"
+						return m, nil
+					}
+					conflicts, _ := git.GetConflictFiles()
+					if len(m.LogLines) > 0 {
+						m.LogLines = conflicts
+						m.Message = "Conflicts still present. Please resolve all conflicts."
+						m.MessageType = "warning"
+						return m, nil
+					}
+					m.Message = "✓ Rebase completed successfully"
+					m.MessageType = "success"
+					m.CurrentView = model.FileView
+					m.DialogTarget = ""
+					m.LogLines = nil
+					m.RefreshData()
+					return m, nil
+				}
+			case "X", "x":
+				if len(m.LogLines) > 0 {
+					err := git.RebaseAbort()
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error aborting rebase: %s", err)
+						m.MessageType = "error"
+						return m, nil
+					}
+					m.Message = "Rebase aborted."
+					m.MessageType = "info"
+					m.CurrentView = model.FileView
+					m.DialogTarget = ""
+					m.LogLines = nil
+					m.RefreshData()
+					return m, nil
+				}
 			case "esc":
 				m.CurrentView = model.FileView
 				m.DialogTarget = ""
 				m.Message = ""
 				m.Cursor = 0
+				m.LogLines = nil
 				return m, nil
 			}
 		}
@@ -276,6 +482,8 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.Cursor = 0
 				m.DialogTarget = ""
 				m.LogLines = nil
+				m.Message = fmt.Sprintf("Current branch: %s - Select target branch to merge INTO", m.CurrentBranch)
+				m.MessageType = "info"
 				// Ensure branches are loaded
 				if len(m.Branches) == 0 {
 					m.RefreshData()
@@ -287,7 +495,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.CurrentView = model.RebaseView
 				m.Cursor = 0
 				m.DialogTarget = ""
-				m.Message = "Use ↑/↓ to navigate and space to select a branch"
+				m.Message = fmt.Sprintf("Current branch: %s - Select base branch to rebase ONTO", m.CurrentBranch)
 				m.MessageType = "info"
 				m.LogLines = nil
 				// Ensure branches are loaded
@@ -574,8 +782,11 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			m.Message = fmt.Sprintf("✗ Error pushing changes: %s", msg.err)
 			m.MessageType = "error"
 		} else {
-			m.Message = "✓ Changes pushed successfully"
+			m.Message = "✓ Changes pushed to remote successfully"
 			m.MessageType = "success"
+			m.CurrentView = model.FileView
+			m.DialogTarget = ""
+			m.LogLines = nil
 			m.RefreshData()
 		}
 
@@ -607,5 +818,5 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 
 // isPrintableChar checks whether a rune is a printable ASCII or extended character.
 func isPrintableChar(r rune) bool {
-	return (r >= 32 && r <= 126) || (r >= 128 && r <= 255)
+	return (r >= 32 && r <= 126) || (r >= 128 && r <= 255) // Extended ASCII range
 }
