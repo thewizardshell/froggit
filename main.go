@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	VERSION            = "beta-0.2.1"
+	VERSION            = "0.3.0 - beta"
 	AUTHOR             = "Vicente Roa | Github: @thewizardshell"
 	REPO               = "https://github.com/thewizardshell/froggit"
 	SUPPORTED_COMMANDS = `
@@ -29,6 +29,9 @@ Supported Git Commands:
     - remote: Manage remote repositories
     - push: Push changes to remote repository
     - pull: Fetch from remote repository
+	- log: Show commit logs
+	- merge: Merge branches
+	- rebase: Reapply commits on top of another base tip
 `
 	KEYBOARD_SHORTCUTS = `
 Keyboard Shortcuts:
