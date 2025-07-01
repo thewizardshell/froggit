@@ -114,3 +114,31 @@ func (g *GitClient) LogsGraph() (string, error) {
 	}
 	return string(output), nil
 }
+
+// GetConflictFiles devuelve los archivos en conflicto usando git diff --name-only --diff-filter=U
+func GetConflictFiles() ([]string, error) {
+	output, err := NewGitClient("").runGitCommand("diff", "--name-only", "--diff-filter=U")
+	if err != nil {
+		return nil, err
+	}
+	lines := strings.Split(strings.TrimSpace(string(output)), "\n")
+	var files []string
+	for _, l := range lines {
+		if l != "" {
+			files = append(files, l)
+		}
+	}
+	return files, nil
+}
+
+// MergeContinue ejecuta git merge --continue
+func MergeContinue() error {
+	_, err := NewGitClient("").runGitCommandCombinedOutput("merge", "--continue")
+	return err
+}
+
+// MergeAbort ejecuta git merge --abort
+func MergeAbort() error {
+	_, err := NewGitClient("").runGitCommandCombinedOutput("merge", "--abort")
+	return err
+}

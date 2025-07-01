@@ -47,7 +47,7 @@ func performPull() tea.Cmd {
 	}
 }
 
-var ghClient = gh.NewGhClient() // Puedes mover esto a otro lado si prefieres
+var ghClient = gh.NewGhClient() // You can move this elsewhere if you prefer
 
 // GetGhClient returns the shared GitHub client instance
 func GetGhClient() *gh.GhClient {
@@ -67,10 +67,10 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					repoFullName := repo.Owner.Login + "/" + repo.Name
 					err := gh.CloneRepository(ghClient, repoFullName, "")
 					if err != nil {
-						m.Message = "✗ Error al clonar: " + err.Error()
+						m.Message = "✗ Error cloning: " + err.Error()
 						m.MessageType = "error"
 					} else {
-						m.Message = "✓ Repositorio clonado exitosamente"
+						m.Message = "✓ Repository cloned successfully"
 						m.MessageType = "success"
 					}
 				}
@@ -87,8 +87,8 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
 	case tea.KeyMsg:
-		// --- GitHub Controls eliminados del flujo principal ---
-		// La vista de repositorios solo se accede al inicio si no hay git init
+		// --- GitHub Controls removed from main flow ---
+		// The repository view is only accessed at startup if there is no git init
 
 		// --- Repository List Navigation ---
 		if m.CurrentView == model.RepositoryListView {
@@ -117,6 +117,114 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 
 		if m.CurrentView == model.LogGraphView {
 			return HandleLogGraphKey(m, msg)
+		}
+
+		// --- MergeView controls ---
+		if m.CurrentView == model.MergeView {
+			switch msg.String() {
+			case "up":
+				if m.Cursor > 0 {
+					m.Cursor--
+				}
+				return m, nil
+			case "down":
+				if m.Cursor < len(m.Branches)-1 {
+					m.Cursor++
+				}
+				return m, nil
+			case " ", "space": // Accept both space and "space"
+				if len(m.Branches) > 0 && m.Cursor < len(m.Branches) {
+					selected := m.Branches[m.Cursor]
+					if m.DialogTarget == selected {
+						m.DialogTarget = "" // unselect if already selected
+						m.Message = "Selection unmarked"
+						m.MessageType = "info"
+					} else {
+						m.DialogTarget = selected
+						m.Message = fmt.Sprintf("Branch selected for merge: %s", m.DialogTarget)
+						m.MessageType = "success"
+					}
+				}
+				return m, nil
+			case "M", "m": // Allow both uppercase and lowercase
+				if m.DialogTarget != "" {
+					err := git.Merge(m.DialogTarget)
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error merging: %s", err)
+						m.MessageType = "error"
+					} else {
+						m.Message = fmt.Sprintf("✓ Merge with %s successful", m.DialogTarget)
+						m.MessageType = "success"
+						m.CurrentView = model.FileView
+						m.DialogTarget = ""
+						m.RefreshData()
+					}
+				} else {
+					m.Message = "Select a branch to merge by pressing space"
+					m.MessageType = "warning"
+				}
+				return m, nil
+			case "esc":
+				m.CurrentView = model.FileView
+				m.DialogTarget = ""
+				m.Message = ""
+				m.Cursor = 0
+				return m, nil
+			}
+		}
+
+		// --- RebaseView controls ---
+		if m.CurrentView == model.RebaseView {
+			switch msg.String() {
+			case "up":
+				if m.Cursor > 0 {
+					m.Cursor--
+				}
+				return m, nil
+			case "down":
+				if m.Cursor < len(m.Branches)-1 {
+					m.Cursor++
+				}
+				return m, nil
+			case " ", "space": // Accept both space and "space"
+				if len(m.Branches) > 0 && m.Cursor < len(m.Branches) {
+					selected := m.Branches[m.Cursor]
+					if m.DialogTarget == selected {
+						m.DialogTarget = "" // unselect if already selected
+						m.Message = "Selection unmarked"
+						m.MessageType = "info"
+					} else {
+						m.DialogTarget = selected
+						m.Message = fmt.Sprintf("Branch selected for rebase: %s", m.DialogTarget)
+						m.MessageType = "success"
+					}
+				}
+				return m, nil
+			case "R", "r": // Allow both uppercase and lowercase
+				if m.DialogTarget != "" {
+					err := git.Rebase(m.DialogTarget)
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error rebasing: %s", err)
+						m.MessageType = "error"
+					} else {
+						m.Message = fmt.Sprintf("✓ Rebase with %s successful", m.DialogTarget)
+						m.MessageType = "success"
+						m.CurrentView = model.FileView
+						m.DialogTarget = ""
+						m.RefreshData()
+					}
+				} else {
+					m.Message = "Select a branch to rebase by pressing space"
+					m.MessageType = "warning"
+				}
+				return m, nil
+			case "esc":
+				m.CurrentView = model.FileView
+				m.DialogTarget = ""
+				m.Message = ""
+				m.Cursor = 0
+				return m, nil
+			}
 		}
 
 		if m.CurrentView == model.ConfirmDialog {
@@ -159,6 +267,33 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		case "A":
 			if m.CurrentView == model.FileView && !m.AdvancedMode {
 				m.AdvancedMode = true
+				return m, nil
+			}
+		// --- ADVANCED MODE: Merge and Rebase (IMPROVED) ---
+		case "M":
+			if m.CurrentView == model.FileView && m.AdvancedMode {
+				m.CurrentView = model.MergeView
+				m.Cursor = 0
+				m.DialogTarget = ""
+				m.LogLines = nil
+				// Ensure branches are loaded
+				if len(m.Branches) == 0 {
+					m.RefreshData()
+				}
+				return m, nil
+			}
+		case "R":
+			if m.CurrentView == model.FileView && m.AdvancedMode {
+				m.CurrentView = model.RebaseView
+				m.Cursor = 0
+				m.DialogTarget = ""
+				m.Message = "Use ↑/↓ to navigate and space to select a branch"
+				m.MessageType = "info"
+				m.LogLines = nil
+				// Ensure branches are loaded
+				if len(m.Branches) == 0 {
+					m.RefreshData()
+				}
 				return m, nil
 			}
 		case "a":
@@ -408,7 +543,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				return m, cmd
 
 			case "A":
-				m.Message = "Advanced features (logs, merge, stash, rebase) are coming soon"
 				m.MessageType = "info"
 				return m, nil
 			case "x":

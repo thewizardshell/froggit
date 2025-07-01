@@ -46,6 +46,10 @@ func Render(m model.Model) string {
 		sb.WriteString(view.RenderConfirmCloneRepoView(m))
 	case model.GitHubControlsView:
 		sb.WriteString(view.RenderGitHubControlsView())
+	case model.MergeView:
+		sb.WriteString(view.RenderMergeView(m))
+	case model.RebaseView:
+		sb.WriteString(view.RenderRebaseView(m))
 	}
 
 	if m.Message != "" {

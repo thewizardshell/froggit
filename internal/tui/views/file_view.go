@@ -62,10 +62,11 @@ func RenderFileView(m model.Model) string {
 		controls = []string{
 			"[↑/↓] navigate",
 			"[L] log graph",
+			"[M] merge",
+			"[R] rebase",
 			"[esc] exit advanced",
 			"[?] help",
 		}
-		s.WriteString(styles.WarningStyle.Render("\n\n🚧 Advanced features (merge, stash, rebase) coming soon!\n"))
 	} else {
 		controls = []string{"[↑/↓] navigate", "[space] stage/unstage"}
 		if len(m.Files) > 0 {

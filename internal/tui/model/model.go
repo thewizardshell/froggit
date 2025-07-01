@@ -23,6 +23,8 @@ const (
 	RepositoryListView
 	ConfirmCloneRepoView
 	GitHubControlsView
+	MergeView
+	RebaseView
 )
 
 type Model struct {
@@ -55,6 +57,15 @@ type Model struct {
 	Repositories      []gh.Repository
 	SelectedRepoIndex int
 	RepoToClone       *gh.Repository
+
+	// Merge/Rebase interactive state
+	SelectedBranch      string   // branch selected for merge/rebase
+	MergeConflictFiles  []string // files in conflict during merge
+	RebaseConflictFiles []string // files in conflict during rebase
+	IsMerging           bool
+	IsRebasing          bool
+	MergeStep           string // "select", "confirm", "conflict"
+	RebaseStep          string // "select", "confirm", "conflict"
 
 	DialogType   string
 	DialogTarget string
@@ -132,4 +143,12 @@ func (m *Model) RefreshData() {
 	m.Remotes = <-remotesCh
 	m.CurrentBranch = current
 	m.HasRemoteChanges = <-hasRemoteChangesCh
+}
+
+func (m *Model) SetMergeConflictFiles(files []string) {
+	m.MergeConflictFiles = files
+}
+
+func (m *Model) SetRebaseConflictFiles(files []string) {
+	m.RebaseConflictFiles = files
 }
