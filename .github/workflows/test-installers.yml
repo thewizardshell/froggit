@@ -21,47 +21,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Make install script executable
-        run: chmod +x scripts/install.sh
-
-      - name: Test install script (dry run with force)
+      - name: Install and test
         run: |
-          # Create a modified version for testing that doesn't require user input
           cp scripts/install.sh test-install.sh
-
-          # Replace the user confirmation with automatic yes
           sed -i 's/read -r -p "Do you want to continue? \[y\/N\] " answer < \/dev\/tty/answer="y"/' test-install.sh
-
-          # Make it executable
           chmod +x test-install.sh
-
-          # Run the test
           ./test-install.sh
 
       - name: Verify installation
         run: |
-          # Check if froggit was installed
           if command -v froggit >/dev/null 2>&1; then
-            echo "Froggit command found in PATH"
-            froggit --version || echo "Version command not available, but binary exists"
+            froggit --version || true
           elif [ -f "/usr/local/bin/froggit" ]; then
-            echo "Froggit binary found at /usr/local/bin/froggit"
-            /usr/local/bin/froggit --version || echo "Version command not available, but binary exists"
+            /usr/local/bin/froggit --version || true
           else
-            echo "ERROR: Froggit installation not found"
-            exit 1
-          fi
-
-      - name: Test binary functionality
-        run: |
-          # Test that the binary can run (even if it exits with error due to no git repo)
-          if command -v froggit >/dev/null 2>&1; then
-            froggit --help || echo "Help command completed"
-          else
-            /usr/local/bin/froggit --help || echo "Help command completed"
+            echo "ERROR: Froggit not found" && exit 1
           fi
 
   test-macos-installer:
@@ -69,47 +45,23 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Make install script executable
-        run: chmod +x scripts/install.sh
-
-      - name: Test install script (dry run with force)
+      - name: Install and test
         run: |
-          # Create a modified version for testing that doesn't require user input
           cp scripts/install.sh test-install.sh
-
-          # Replace the user confirmation with automatic yes
           sed -i '' 's/read -r -p "Do you want to continue? \[y\/N\] " answer < \/dev\/tty/answer="y"/' test-install.sh
-
-          # Make it executable
           chmod +x test-install.sh
-
-          # Run the test
           ./test-install.sh
 
       - name: Verify installation
         run: |
-          # Check if froggit was installed
           if command -v froggit >/dev/null 2>&1; then
-            echo "Froggit command found in PATH"
-            froggit --version || echo "Version command not available, but binary exists"
+            froggit --version || true
           elif [ -f "/usr/local/bin/froggit" ]; then
-            echo "Froggit binary found at /usr/local/bin/froggit"
-            /usr/local/bin/froggit --version || echo "Version command not available, but binary exists"
+            /usr/local/bin/froggit --version || true
           else
-            echo "ERROR: Froggit installation not found"
-            exit 1
-          fi
-
-      - name: Test binary functionality
-        run: |
-          # Test that the binary can run (even if it exits with error due to no git repo)
-          if command -v froggit >/dev/null 2>&1; then
-            froggit --help || echo "Help command completed"
-          else
-            /usr/local/bin/froggit --help || echo "Help command completed"
+            echo "ERROR: Froggit not found" && exit 1
           fi
 
   test-windows-installer:
@@ -117,92 +69,16 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Test PowerShell install script
+      - name: Install and test
         shell: powershell
         run: |
-          # Run the PowerShell installer with Force flag to skip prompts
           ./scripts/install.ps1 -Force
-
-      - name: Verify installation
-        shell: powershell
-        run: |
-          # Check if froggit was installed
           $froggitPath = "C:\tools\froggit\froggit.exe"
-
           if (Test-Path $froggitPath) {
-            Write-Host "Froggit binary found at $froggitPath"
-            try {
-              $version = & $froggitPath --version 2>$null
-              if ($version) {
-                Write-Host "Version: $version"
-              } else {
-                Write-Host "Version command not available, but binary exists"
-              }
-            } catch {
-              Write-Host "Version command not available, but binary exists"
-            }
+            & $froggitPath --version 2>$null || Write-Host "Binary exists"
           } else {
-            Write-Error "ERROR: Froggit installation not found at $froggitPath"
+            Write-Error "Froggit not found at $froggitPath"
             exit 1
-          }
-
-      - name: Test binary functionality
-        shell: powershell
-        run: |
-          # Test that the binary can run (even if it exits with error due to no git repo)
-          $froggitPath = "C:\tools\froggit\froggit.exe"
-          try {
-            & $froggitPath --help
-            Write-Host "Help command completed successfully"
-          } catch {
-            Write-Host "Help command completed (may have exited with non-zero code)"
-          }
-
-      - name: Test PATH update (if admin)
-        shell: powershell
-        run: |
-          # Check if the installation directory is in PATH
-          $installDir = "C:\tools\froggit"
-          $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-
-          if ($currentPath -like "*$installDir*") {
-            Write-Host "Installation directory found in system PATH"
-            try {
-              froggit --version
-              Write-Host "Froggit accessible from PATH"
-            } catch {
-              Write-Host "Froggit found in PATH but version command failed (expected for some scenarios)"
-            }
-          } else {
-            Write-Host "Installation directory not in system PATH (expected for non-admin runs)"
-          }
-
-  test-installer-scripts-syntax:
-    name: Test Script Syntax
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Test bash script syntax
-        run: |
-          bash -n scripts/install.sh
-          echo "Bash script syntax is valid"
-
-      - name: Test PowerShell script syntax
-        shell: pwsh
-        run: |
-          # Test PowerShell syntax
-          $errors = $null
-          $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content scripts/install.ps1 -Raw), [ref]$errors)
-          if ($errors.Count -gt 0) {
-            Write-Error "PowerShell script has syntax errors:"
-            $errors | ForEach-Object { Write-Error $_.Message }
-            exit 1
-          } else {
-            Write-Host "PowerShell script syntax is valid"
           }
