@@ -77,7 +77,11 @@ jobs:
           ./scripts/install.ps1 -Force
           $froggitPath = "C:\tools\froggit\froggit.exe"
           if (Test-Path $froggitPath) {
-            & $froggitPath --version 2>$null || Write-Host "Binary exists"
+            try {
+              & $froggitPath --version 2>$null
+            } catch {
+              Write-Host "Binary exists"
+            }
           } else {
             Write-Error "Froggit not found at $froggitPath"
             exit 1
