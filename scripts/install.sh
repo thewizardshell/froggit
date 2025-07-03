@@ -74,7 +74,6 @@ curl -L -o froggit.zip "$URL"
 loading "📦 Unzipping"
 unzip -o froggit.zip
 
-# The extracted binary has the OS-ARCH suffix
 EXTRACTED_NAME="${BIN_NAME}-${OS}-${ARCH}"
 FINAL_NAME="${BIN_NAME}"
 
