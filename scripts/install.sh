@@ -74,11 +74,13 @@ curl -L -o froggit.zip "$URL"
 loading "📦 Unzipping"
 unzip -o froggit.zip
 
+# The extracted binary has the OS-ARCH suffix
+EXTRACTED_NAME="${BIN_NAME}-${OS}-${ARCH}"
 FINAL_NAME="${BIN_NAME}"
 
 loading "🚚 Installing to /usr/local/bin"
-chmod +x "$FINAL_NAME"
-sudo mv "$FINAL_NAME" /usr/local/bin/froggit
+chmod +x "$EXTRACTED_NAME"
+sudo mv "$EXTRACTED_NAME" /usr/local/bin/froggit
 
 echo -e "\n✅ \033[1;32mFroggit installed successfully!\033[0m"
 echo "👉 Run 'froggit' to get started 🐸"
