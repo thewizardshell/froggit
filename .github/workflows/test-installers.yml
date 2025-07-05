@@ -1,0 +1,88 @@
+name: Test Installation Scripts
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "scripts/install.sh"
+      - "scripts/install.ps1"
+      - ".github/workflows/test-installers.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "scripts/install.sh"
+      - "scripts/install.ps1"
+      - ".github/workflows/test-installers.yml"
+  workflow_dispatch:
+
+jobs:
+  test-unix-installer:
+    name: Test Unix/Linux Installer
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install and test
+        run: |
+          cp scripts/install.sh test-install.sh
+          sed -i 's/read -r -p "Do you want to continue? \[y\/N\] " answer < \/dev\/tty/answer="y"/' test-install.sh
+          chmod +x test-install.sh
+          ./test-install.sh
+
+      - name: Verify installation
+        run: |
+          if command -v froggit >/dev/null 2>&1; then
+            froggit --version || true
+          elif [ -f "/usr/local/bin/froggit" ]; then
+            /usr/local/bin/froggit --version || true
+          else
+            echo "ERROR: Froggit not found" && exit 1
+          fi
+
+  test-macos-installer:
+    name: Test macOS Installer
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install and test
+        run: |
+          cp scripts/install.sh test-install.sh
+          sed -i '' 's/read -r -p "Do you want to continue? \[y\/N\] " answer < \/dev\/tty/answer="y"/' test-install.sh
+          chmod +x test-install.sh
+          ./test-install.sh
+
+      - name: Verify installation
+        run: |
+          if command -v froggit >/dev/null 2>&1; then
+            froggit --version || true
+          elif [ -f "/usr/local/bin/froggit" ]; then
+            /usr/local/bin/froggit --version || true
+          else
+            echo "ERROR: Froggit not found" && exit 1
+          fi
+
+  test-windows-installer:
+    name: Test Windows Installer
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install and test
+        shell: powershell
+        run: |
+          ./scripts/install.ps1 -Force
+          $froggitPath = "C:\tools\froggit\froggit.exe"
+          if (Test-Path $froggitPath) {
+            try {
+              & $froggitPath --version 2>$null
+            } catch {
+              Write-Host "Binary exists"
+            }
+          } else {
+            Write-Error "Froggit not found at $froggitPath"
+            exit 1
+          }
