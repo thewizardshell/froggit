@@ -4,114 +4,23 @@ package update
 
 import (
 	"fmt"
-	"time"
-
-	"froggit/internal/gh"
 	"froggit/internal/git"
 	"froggit/internal/tui/model"
+	"froggit/internal/tui/update/actions"
+	"froggit/internal/tui/update/messages"
+	"froggit/internal/utils"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Internal messages for async operations
-type pushMsg struct{ err error }
-type fetchMsg struct{ err error }
-type pullMsg struct{ err error }
-type spinnerTickMsg struct{}
-type switchBranchMsg struct {
-	err          error
-	targetBranch string
-	nextAction   string // "merge" or "rebase"
-	sourceBranch string
-}
-
-// spinner returns a Cmd that emits spinnerTickMsg every 100ms.
-func spinner() tea.Cmd {
-	return tea.Tick(time.Millisecond*100, func(t time.Time) tea.Msg {
-		return spinnerTickMsg{}
-	})
-}
-
-// performPush runs git.Push asynchronously and returns a pushMsg.
-func performPush() tea.Cmd {
-	return func() tea.Msg {
-		return pushMsg{err: git.Push()}
-	}
-}
-
-// performFetch runs git.Fetch asynchronously and returns a fetchMsg.
-func performFetch() tea.Cmd {
-	return func() tea.Msg {
-		return fetchMsg{err: git.Fetch()}
-	}
-}
-
-// performPull runs git.Pull asynchronously and returns a pullMsg.
-func performPull() tea.Cmd {
-	return func() tea.Msg {
-		return pullMsg{err: git.Pull()}
-	}
-}
-
-// performSwitchAndMerge switches to target branch and then merges source branch
-func performSwitchAndMerge(targetBranch, sourceBranch string) tea.Cmd {
-	return func() tea.Msg {
-		err := git.Checkout(targetBranch)
-		return switchBranchMsg{
-			err:          err,
-			targetBranch: targetBranch,
-			nextAction:   "merge",
-			sourceBranch: sourceBranch,
-		}
-	}
-}
-
-// performSwitchAndRebase switches to source branch and then rebases onto target
-func performSwitchAndRebase(sourceBranch, targetBranch string) tea.Cmd {
-	return func() tea.Msg {
-		err := git.Checkout(sourceBranch)
-		return switchBranchMsg{
-			err:          err,
-			targetBranch: targetBranch,
-			nextAction:   "rebase",
-			sourceBranch: sourceBranch,
-		}
-	}
-}
-
-var ghClient = gh.NewGhClient() // You can move this elsewhere if you prefer
-
-// GetGhClient returns the shared GitHub client instance
-func GetGhClient() *gh.GhClient {
-	return ghClient
-}
-
 // Update handles Bubble Tea messages and returns the updated model
 // along with the next command to execute.
 func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
-	// --- Confirm Clone Repo Dialog ---
 	if m.CurrentView == model.ConfirmCloneRepoView {
 		if key, ok := msg.(tea.KeyMsg); ok {
-			switch key.String() {
-			case "y":
-				if m.RepoToClone != nil {
-					repo := m.RepoToClone
-					repoFullName := repo.Owner.Login + "/" + repo.Name
-					err := gh.CloneRepository(ghClient, repoFullName, "")
-					if err != nil {
-						m.Message = "✗ Error cloning: " + err.Error()
-						m.MessageType = "error"
-					} else {
-						m.Message = "✓ Repository cloned successfully"
-						m.MessageType = "success"
-					}
-				}
-				m.CurrentView = model.RepositoryListView
-				m.RepoToClone = nil
-				return m, nil
-			case "n", "esc":
-				m.CurrentView = model.RepositoryListView
-				m.RepoToClone = nil
+			var handled bool
+			m, handled = actions.HandleConfirmCloneRepo(m, key.String())
+			if handled {
 				return m, nil
 			}
 		}
@@ -119,22 +28,20 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 
-	case switchBranchMsg:
-		if msg.err != nil {
-			m.Message = fmt.Sprintf("✗ Error switching to branch %s: %s", msg.targetBranch, msg.err)
+	case messages.SwitchBranchMsg:
+		if msg.Err != nil {
+			m.Message = fmt.Sprintf("✗ Error switching to branch %s: %s", msg.TargetBranch, msg.Err)
 			m.MessageType = "error"
 			return m, nil
 		}
 
-		// Update current branch
-		m.CurrentBranch = msg.targetBranch
+		m.CurrentBranch = msg.TargetBranch
 		m.RefreshData()
 
-		if msg.nextAction == "merge" {
-			// Now perform the merge
-			err := git.Merge(msg.sourceBranch)
+		if msg.NextAction == "merge" {
+			err := git.Merge(msg.SourceBranch)
 			if err != nil {
-				m.Message = fmt.Sprintf("✗ Error merging %s into %s: %s", msg.sourceBranch, msg.targetBranch, err)
+				m.Message = fmt.Sprintf("✗ Error merging %s into %s: %s", msg.SourceBranch, msg.TargetBranch, err)
 				m.MessageType = "error"
 				return m, nil
 			}
@@ -142,21 +49,19 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			conflicts, _ := git.GetConflictFiles()
 			if len(conflicts) > 0 {
 				m.LogLines = conflicts
-				m.Message = fmt.Sprintf("Conflicts detected while merging %s into %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.sourceBranch, msg.targetBranch)
+				m.Message = fmt.Sprintf("Conflicts detected while merging %s into %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "warning"
-				return m, nil
 			} else {
-				m.Message = fmt.Sprintf("✓ Successfully merged %s into %s. Press [P] to push to remote.", msg.sourceBranch, msg.targetBranch)
+				m.Message = fmt.Sprintf("✓ Successfully merged %s into %s. Press [P] to push to remote.", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "success"
 				m.CurrentView = model.MergeView
 				m.AwaitingPush = true
-				return m, nil
 			}
-		} else if msg.nextAction == "rebase" {
-			// Now perform the rebase
-			err := git.Rebase(msg.targetBranch)
+			return m, nil
+		} else if msg.NextAction == "rebase" {
+			err := git.Rebase(msg.TargetBranch)
 			if err != nil {
-				m.Message = fmt.Sprintf("✗ Error rebasing %s onto %s: %s", msg.sourceBranch, msg.targetBranch, err)
+				m.Message = fmt.Sprintf("✗ Error rebasing %s onto %s: %s", msg.SourceBranch, msg.TargetBranch, err)
 				m.MessageType = "error"
 				return m, nil
 			}
@@ -164,23 +69,20 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			conflicts, _ := git.GetConflictFiles()
 			if len(conflicts) > 0 {
 				m.LogLines = conflicts
-				m.Message = fmt.Sprintf("Conflicts detected while rebasing %s onto %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.sourceBranch, msg.targetBranch)
+				m.Message = fmt.Sprintf("Conflicts detected while rebasing %s onto %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "warning"
-				return m, nil
 			} else {
-				m.Message = fmt.Sprintf("✓ Successfully rebased %s onto %s", msg.sourceBranch, msg.targetBranch)
+				m.Message = fmt.Sprintf("✓ Successfully rebased %s onto %s", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "success"
 				m.CurrentView = model.FileView
 				m.DialogTarget = ""
 				m.LogLines = nil
 				m.RefreshData()
-				return m, nil
 			}
+			return m, nil
 		}
 
 	case tea.KeyMsg:
-		// --- GitHub Controls removed from main flow ---
-		// The repository view is only accessed at startup if there is no git init
 
 		// --- Repository List Navigation ---
 		if m.CurrentView == model.RepositoryListView {
@@ -638,14 +540,14 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		}
 
 		if m.CurrentView == model.CommitView {
-			if len(msg.Runes) == 1 && isPrintableChar(msg.Runes[0]) {
+			if len(msg.Runes) == 1 && utils.IsPrintableChar(msg.Runes[0]) {
 				m.CommitMsg += string(msg.Runes)
 				return m, nil
 			}
 		}
 
 		if m.CurrentView == model.NewBranchView {
-			if len(msg.Runes) == 1 && isPrintableChar(msg.Runes[0]) {
+			if len(msg.Runes) == 1 && utils.IsPrintableChar(msg.Runes[0]) {
 				m.NewBranchName += string(msg.Runes)
 				return m, nil
 			}
@@ -814,9 +716,4 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 	}
 
 	return m, nil
-}
-
-// isPrintableChar checks whether a rune is a printable ASCII or extended character.
-func isPrintableChar(r rune) bool {
-	return (r >= 32 && r <= 126) || (r >= 128 && r <= 255) // Extended ASCII range
 }
