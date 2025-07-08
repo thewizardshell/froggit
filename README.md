@@ -1,61 +1,36 @@
-<h1 align="center">Froggit</h1>
+<h1 align="center"> Froggit </h1>
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="Froggit Logo" width="450" />
-</p>
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="Froggit Logo" width="400" />
+  
+  <p><strong>A modern, minimalist Git TUI</strong></p>
+  <p>Designed for clarity, speed, and smooth integration with your terminal workflow.</p>
 
-<p align="center">
-  <b>A modern, minimalist Git TUI</b><br>
-  Designed for clarity, speed, and smooth integration with your terminal workflow.
-</p>
+  [![Release](https://img.shields.io/github/v/release/thewizardshell/froggit?label=Release&color=27ae60)](https://github.com/thewizardshell/froggit/releases)
+  [![Installer Tests](https://github.com/thewizardshell/froggit/actions/workflows/test-installers.yml/badge.svg)](https://github.com/thewizardshell/froggit/actions/workflows/test-installers.yml)
+  [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-2ecc71?style=flat)](#)
+  [![Go Version](https://img.shields.io/badge/Go-1.20%2B-145a32?style=flat)](#)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-27ae60?style=flat-square" alt="Supported Platforms" />
-  <img src="https://img.shields.io/badge/Go-1.20%2B-145a32?style=flat-square" alt="Go Version" />
-</p>
-
-<p align="center">
-  <a href="https://froggit-docs.vercel.app/guides/install/">Installation</a> •
-  <a href="#features">Features</a> •
-  <a href="#github-cli-integration">GitHub CLI Integration</a> •
-  <a href="#shortcuts">Shortcuts</a> •
-  <a href="#documentation">Documentation</a>
-</p>
-
-<p align="center">
   <img src="https://github.com/user-attachments/assets/7b5a2dd6-fbc3-4035-83fe-a072d2298f57" alt="Froggit preview" width="700" />
-</p>
+</div>
 
----
 
-## Requirements
-
-- [Git](https://git-scm.com/) installed and accessible in your terminal
-- [Go 1.20+](https://go.dev/dl/) (only required if building from source)
-- A terminal with [Nerd Fonts](https://www.nerdfonts.com/) support for best UI experience
-- [GitHub CLI](https://cli.github.com/) (`gh`) – optional, for GitHub integration
-
----
 
 ## Installation
 
-### Option 1: Installer Script (Recommended)
+### Quick Install (Recommended)
 
-#### Linux / macOS
-
+**Linux / macOS:**
 ```bash
 curl -s https://raw.githubusercontent.com/thewizardshell/froggit/master/scripts/install.sh | bash
-````
+```
 
-#### Windows (PowerShell)
-
+**Windows (PowerShell):**
 ```powershell
 iwr https://raw.githubusercontent.com/thewizardshell/froggit/master/scripts/install.ps1 -UseBasicParsing | iex
 ```
 
----
-
-### Option 2: Build from Source
+### Build from Source
 
 ```bash
 git clone https://github.com/thewizardshell/froggit.git
@@ -65,111 +40,121 @@ go build
 ./froggit
 ```
 
----
+## Requirements
 
-## Features
+- [Git](https://git-scm.com/) installed and accessible in your terminal
+- [Go 1.20+](https://go.dev/dl/) (only required if building from source)
+- A terminal with [Nerd Fonts](https://www.nerdfonts.com/) support
+- [GitHub CLI](https://cli.github.com/) (`gh`) – optional, for GitHub integration
 
-* **Visual Git Interface**
+## Feature Support
 
-  * Stage, unstage, discard changes
-  * View logs and diffs interactively
+### Git Operations
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Stage all | 🟢 | Stage all changes |
+| Branches | 🟢 | View and manage branches |
+| Remotes | 🟢 | Manage remote repositories |
+| Push | 🟢 | Push changes to remote |
+| Fetch | 🟢 | Fetch from remote |
+| Pull | 🟢 | Pull changes (when remote changes available) |
+| Commit | 🟢 | Create commits |
+| Discard changes | 🟢 | Discard uncommitted changes |
+| Refresh | 🟢 | Refresh repository status |
+| Advanced mode | 🟢 | Access to logs, merge, stash, rebase |
+| Logs | 🟢 | View commit history |
+| Merge | 🟢 | Merge branches |
+| Stash | 🟡 | Stash changes |
+| Rebase | 🟢 | Rebase branches |
 
-* **Branch Management**
+### GitHub CLI Integration
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Create repository | 🟢 | Create new GitHub repository |
+| Clone repository | 🟢 | Clone from your GitHub repositories |
 
-  * Create, switch, and delete branches
+🟢 Supported &nbsp;&nbsp; 🟡 In Development &nbsp;&nbsp; 🔴 Planned
 
-* **GitHub CLI Integration**
-
-  * Clone and explore repositories using `gh` (if installed)
-
-* **Other Tools**
-
-  * Stash support
-  * Rebase and merge support
-  * Commit previews with feedback
-
----
 
 ## GitHub CLI Integration
 
-Froggit optionally integrates with [GitHub CLI](https://cli.github.com/) for features like cloning and listing repositories.
-
-To set it up:
+Froggit integrates seamlessly with [GitHub CLI](https://cli.github.com/) to enhance your workflow.
 
 ```bash
 gh auth login
 ```
 
-This will walk you through authenticating with GitHub.
+Once authenticated, Froggit will detect `gh` and enable features like cloning repositories directly from GitHub.
 
-Once logged in, Froggit will detect `gh` and unlock additional options for cloning and working with your GitHub repositories.
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/8f3de6e0-16bf-4ac6-bc91-d434512df4d1" alt="GitHub CLI integration in Froggit" width="700" />
+</div>
 
-<p align="center">
-  <!-- Aquí va tu nuevo GIF de integración con GitHub CLI -->
-  <img src="https://github.com/user-attachments/assets/8f3de6e0-16bf-4ac6-bc91-d434512df4d1" alt="GitHub CLI integration in Froggit" />
-</p>
+## Key Shortcuts
 
----
+### File Management
+- `↑ / ↓`: Navigate files
+- `Space`: Stage/unstage files
+- `a`: Stage all changes
+- `x`: Discard changes
+- `c`: Commit changes
 
-## Shortcuts
+### Branch Operations
+- `b`: View branches
+- `n`: Create new branch
+- `d`: Delete branch
+- `Enter`: Switch branch
 
-(See full list in [keyboard-shortcuts.md](docs/keyboard-shortcuts.md))
-
-### File View
-
-* `↑ / ↓`: Navigate files
-* `Space`: Stage/unstage
-* `a`: Stage all
-* `x`: Discard changes
-* `c`: Commit
-
-### Branches
-
-* `b`: Open branch view
-* `n`: New branch
-* `d`: Delete branch
-* `Enter`: Switch
+### Advanced Mode
+- `A`: Enter advanced mode
+- `M`: Merge (in advanced mode)
+- `R`: Rebase (in advanced mode)
 
 ### Global
+- `q`, `Ctrl+C`: Quit
+- `Esc`: Go back
+- `?`: Show help
 
-* `q`, `Ctrl+C`: Quit
-* `Esc`: Back
-* `?`: Help
-
----
+For a complete list of shortcuts, see the [keyboard shortcuts documentation](docs/keyboard-shortcuts.md).
 
 ## Documentation
 
-* [Installation Guide](https://froggit-docs.vercel.app/guides/install/)
-* [Architecture Overview](docs/architecture.md)
-* [Development Guide](docs/development.md)
-* [Contributing](docs/contributing.md)
-* [Keyboard Shortcuts](docs/keyboard-shortcuts.md)
-
----
-
-## Learn More About Git
-
-* [**Git Handbook**](https://dgamer007.github.io/Git/#/) – A clear and practical guide to mastering Git concepts.
-
----
+- [Installation Guide](https://froggit-docs.vercel.app/guides/install/)
+- [Architecture Overview](docs/architecture.md)
+- [Development Guide](docs/development.md)
+- [Contributing Guidelines](docs/contributing.md)
+- [Keyboard Shortcuts](docs/keyboard-shortcuts.md)
 
 ## Related Tools
 
-* [LazyGit](https://github.com/jesseduffield/lazygit) – Git TUI for power users
-* [tig](https://github.com/jonas/tig) – Terminal Git history browser
-* [Magit](https://github.com/magit/magit) – Git for Emacs
+- [LazyGit](https://github.com/jesseduffield/lazygit) – Git TUI for power users
+- [tig](https://github.com/jonas/tig) – Terminal Git history browser
+- [Magit](https://github.com/magit/magit) – Git for Emacs
 
----
+
+
+
+## Learn More About Git
+
+* [**Git Handbook**](https://alias404.github.io/Git/#/) – A practical, visual Git reference
+
+
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](docs/contributing.md) for details on how to get started.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Author
 
-**Vicente Roa**
+**Vicente Roa**  
 GitHub: [@thewizardshell](https://github.com/thewizardshell)
 
-<p align="center">
-  <!-- Aquí va tu nuevo GIF de integración con GitHub CLI -->
-  <img src="https://github.com/user-attachments/assets/123b5ff0-da29-48b1-b5bf-e39d670642d6" alt="GitHub CLI integration in Froggit" width="100" />
-</p>
+---
 
-
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/123b5ff0-da29-48b1-b5bf-e39d670642d6" alt="Froggit" width="100" />
+</div>
