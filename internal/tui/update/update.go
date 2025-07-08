@@ -37,20 +37,20 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 
 		m.CurrentBranch = msg.TargetBranch
 		m.RefreshData()
-
 		if msg.NextAction == "merge" {
 			err := git.Merge(msg.SourceBranch)
-			if err != nil {
-				m.Message = fmt.Sprintf("✗ Error merging %s into %s: %s", msg.SourceBranch, msg.TargetBranch, err)
-				m.MessageType = "error"
-				return m, nil
-			}
 
 			conflicts, _ := git.GetConflictFiles()
+
 			if len(conflicts) > 0 {
 				m.LogLines = conflicts
 				m.Message = fmt.Sprintf("Conflicts detected while merging %s into %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "warning"
+				return m, nil
+			} else if err != nil {
+				m.Message = fmt.Sprintf("✗ Error merging %s into %s: %s", msg.SourceBranch, msg.TargetBranch, err)
+				m.MessageType = "error"
+				return m, nil
 			} else {
 				m.Message = fmt.Sprintf("✓ Successfully merged %s into %s. Press [P] to push to remote.", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "success"
@@ -60,17 +60,18 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			return m, nil
 		} else if msg.NextAction == "rebase" {
 			err := git.Rebase(msg.TargetBranch)
-			if err != nil {
-				m.Message = fmt.Sprintf("✗ Error rebasing %s onto %s: %s", msg.SourceBranch, msg.TargetBranch, err)
-				m.MessageType = "error"
-				return m, nil
-			}
 
 			conflicts, _ := git.GetConflictFiles()
+
 			if len(conflicts) > 0 {
 				m.LogLines = conflicts
 				m.Message = fmt.Sprintf("Conflicts detected while rebasing %s onto %s. Please resolve them and use [P] Proceed or [X] Cancel.", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "warning"
+				return m, nil
+			} else if err != nil {
+				m.Message = fmt.Sprintf("✗ Error rebasing %s onto %s: %s", msg.SourceBranch, msg.TargetBranch, err)
+				m.MessageType = "error"
+				return m, nil
 			} else {
 				m.Message = fmt.Sprintf("✓ Successfully rebased %s onto %s", msg.SourceBranch, msg.TargetBranch)
 				m.MessageType = "success"
