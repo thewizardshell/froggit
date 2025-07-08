@@ -2,13 +2,14 @@ package styles
 
 import "github.com/charmbracelet/lipgloss"
 
-// Paleta base
 const (
-	Green     = "76"
-	DarkGreen = "34"
-	Gray      = "240"
-	LightGray = "252"
-	Red       = "196"
+	Green        = "76"
+	DarkGreen    = "34"
+	GrayDark     = "240"
+	GrayMid      = "248"
+	GrayLight    = "250"
+	Red          = "196"
+	GrayLightest = "252"
 )
 
 var (
@@ -20,60 +21,58 @@ var (
 
 	HeaderStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(DarkGreen)).
-			Background(lipgloss.Color(Gray)).
+			Background(lipgloss.Color(GrayDark)).
 			Bold(true).
 			Padding(0, 1)
 
 	NormalStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(LightGray))
+			Foreground(lipgloss.Color(GrayLight))
 
 	SelectedStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(Green)).
-			Background(lipgloss.Color(Gray)).
+			Background(lipgloss.Color(GrayDark)).
 			Bold(true).
 			Padding(0, 1)
 
 	ErrorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(Red)).
-			Background(lipgloss.Color("235")).
+			Background(lipgloss.Color(GrayDark)).
 			Bold(true).
 			Padding(0, 1)
 
 	WarningStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("214")).
-		// Background(lipgloss.Color("235")).
-		Bold(true).
-		Padding(0, 1)
+			Bold(true).
+			Padding(0, 1)
 
 	SuccessStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(Green)).
-			Background(lipgloss.Color("236")).
+			Background(lipgloss.Color(GrayDark)).
 			Bold(true).
 			Padding(0, 1)
 
 	HelpStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color("241")).
+			Foreground(lipgloss.Color(GrayLightest)).
 			Italic(true)
 
 	BorderStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color(Gray)).
+			BorderForeground(lipgloss.Color(GrayMid)).
 			Padding(1, 2).
 			Margin(1, 0)
 
 	InputStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(DarkGreen)).
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color(Gray)).
+			BorderForeground(lipgloss.Color(GrayMid)).
 			Padding(0, 1)
 
 	SpinnerStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(Green)).
 			Bold(true)
 
-	// Log graph specific styles
 	GraphSymbolStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("214")) // orange-ish
+				Foreground(lipgloss.Color("214"))
 
 	CommitHashStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("81")).
@@ -85,7 +84,7 @@ var (
 				MarginBottom(1)
 
 	ControlSectionStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("245")).
+				Foreground(lipgloss.Color("254")).
 				Bold(true).
 				MarginTop(1)
 
@@ -94,18 +93,19 @@ var (
 			Bold(true)
 
 	ControlDescStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("249"))
-
-	// Estilo para el contenedor de controles
+				Foreground(lipgloss.Color(GrayLightest))
 	ControlsBoxStyle = lipgloss.NewStyle().
 				Border(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color(Gray)).
+				BorderForeground(lipgloss.Color(GrayMid)).
+				Background(lipgloss.Color("239")).
 				Padding(1, 2).
 				Margin(1, 0).
-				Width(60) // Ancho fijo para mejor alineación
+				Width(60)
+
 	PanelStyle = lipgloss.NewStyle().
 			Border(lipgloss.NormalBorder()).
-			BorderForeground(lipgloss.Color(Gray)).
+			BorderForeground(lipgloss.Color(GrayMid)).
+			Background(lipgloss.Color("236")).
 			Padding(0, 1).
 			Margin(0, 1)
 
@@ -119,11 +119,11 @@ var (
 			Foreground(lipgloss.Color(Green)).
 			Bold(true).
 			Padding(0, 1).
-			Background(lipgloss.Color(Gray))
+			Background(lipgloss.Color(GrayDark))
 
 	StatusBarStyle = lipgloss.NewStyle().
-			Foreground(lipgloss.Color(LightGray)).
-			Background(lipgloss.Color("235")).
+			Foreground(lipgloss.Color(GrayLight)).
+			Background(lipgloss.Color(GrayDark)).
 			Padding(0, 1).
 			Width(100)
 
