@@ -579,7 +579,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		if m.CurrentView == model.FileView {
 			switch msg.String() {
 			case " ":
-				if len(m.Files) > 0 {
+				if len(m.Files) > 0 && m.Cursor < len(m.Files) {
 					f := &m.Files[m.Cursor]
 					f.Staged = !f.Staged
 					if f.Staged {
@@ -590,16 +590,29 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						m.Message = fmt.Sprintf("✓ File %s removed from stage", f.Name)
 					}
 					m.MessageType = "success"
-				}
-			case "a":
-				for i := range m.Files {
-					if !m.Files[i].Staged {
-						m.Files[i].Staged = true
-						git.Add(m.Files[i].Name)
+				} else {
+					// Resetear cursor y mostrar mensaje apropiado
+					if len(m.Files) > 0 {
+						m.Cursor = 0
+					} else {
+						m.Message = "⚠ No files to stage"
+						m.MessageType = "warning"
 					}
 				}
-				m.Message = "✓ All files added to stage"
-				m.MessageType = "success"
+			case "a":
+				if len(m.Files) > 0 {
+					for i := range m.Files {
+						if !m.Files[i].Staged {
+							m.Files[i].Staged = true
+							git.Add(m.Files[i].Name)
+						}
+					}
+					m.Message = "✓ All files added to stage"
+					m.MessageType = "success"
+				} else {
+					m.Message = "⚠ No files to stage"
+					m.MessageType = "warning"
+				}
 			case "c":
 				ok := false
 				for _, f := range m.Files {
@@ -625,6 +638,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.Message = ""
 			case "r":
 				m.RefreshData()
+				utils.ValidateCursor(&m)
 				m.Message = "✓ Status updated"
 				m.MessageType = "success"
 			case "p":
@@ -657,10 +671,13 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.MessageType = "info"
 				return m, nil
 			case "x":
-				if len(m.Files) > 0 {
+				if len(m.Files) > 0 && m.Cursor < len(m.Files) {
 					m.DialogType = "discard_changes"
 					m.DialogTarget = m.Files[m.Cursor].Name
 					m.CurrentView = model.ConfirmDialog
+				} else {
+					m.Message = "⚠ No file selected or no files available"
+					m.MessageType = "warning"
 				}
 			case "?":
 				if m.CurrentView == model.FileView {
@@ -691,6 +708,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			m.DialogTarget = ""
 			m.LogLines = nil
 			m.RefreshData()
+			utils.ValidateCursor(&m)
 		}
 
 	case fetchMsg:
@@ -702,6 +720,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			m.Message = "✓ Changes fetched successfully"
 			m.MessageType = "success"
 			m.RefreshData()
+			utils.ValidateCursor(&m)
 		}
 
 	case pullMsg:
@@ -713,6 +732,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			m.Message = "✓ Changes pulled successfully"
 			m.MessageType = "success"
 			m.RefreshData()
+			utils.ValidateCursor(&m)
 		}
 	}
 
