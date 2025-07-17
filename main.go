@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	VERSION            = "0.3.2 - beta"
+	VERSION            = "0.3.4 - beta"
 	AUTHOR             = "Vicente Roa | Github: @thewizardshell"
 	REPO               = "https://github.com/thewizardshell/froggit"
 	SUPPORTED_COMMANDS = `

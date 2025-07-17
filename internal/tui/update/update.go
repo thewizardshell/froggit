@@ -9,12 +9,11 @@ import (
 	"froggit/internal/tui/update/actions"
 	"froggit/internal/tui/update/messages"
 	"froggit/internal/utils"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Update handles Bubble Tea messages and returns the updated model
-// along with the next command to execute.
 func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 	if m.CurrentView == model.ConfirmCloneRepoView {
 		if key, ok := msg.(tea.KeyMsg); ok {
@@ -136,7 +135,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						return m, nil
 					}
 					if m.DialogTarget == selected {
-						m.DialogTarget = "" // unselect if already selected
+						m.DialogTarget = ""
 						m.Message = "Selection unmarked"
 						m.MessageType = "info"
 					} else {
@@ -154,11 +153,9 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						return m, nil
 					}
 
-					// Show clear message about what will happen
 					m.Message = fmt.Sprintf("Switching to %s and merging %s into it...", m.DialogTarget, m.CurrentBranch)
 					m.MessageType = "info"
 
-					// Switch to target branch and then merge current branch into it
 					return m, performSwitchAndMerge(m.DialogTarget, m.CurrentBranch)
 				} else {
 					m.Message = "Select a target branch first by pressing space"
@@ -239,7 +236,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						return m, nil
 					}
 					if m.DialogTarget == selected {
-						m.DialogTarget = "" // unselect if already selected
+						m.DialogTarget = ""
 						m.Message = "Selection unmarked"
 						m.MessageType = "info"
 					} else {
@@ -257,7 +254,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						return m, nil
 					}
 
-					// For rebase, we stay on current branch and rebase onto target
 					m.Message = fmt.Sprintf("Rebasing %s onto %s...", m.CurrentBranch, m.DialogTarget)
 					m.MessageType = "info"
 
@@ -349,6 +345,15 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						m.MessageType = "success"
 						m.RefreshData()
 					}
+				case "delete_remote":
+					if err := git.RemoveRemote(m.DialogTarget); err != nil {
+						m.Message = fmt.Sprintf("✗ Error deleting remote: %s", err)
+						m.MessageType = "error"
+					} else {
+						m.Message = "✓ Remote deleted successfully"
+						m.MessageType = "success"
+						m.RefreshData()
+					}
 				case "discard_changes":
 					if err := git.DiscardChanges(m.DialogTarget); err != nil {
 						m.Message = fmt.Sprintf("✗ Error discarding changes: %s", err)
@@ -378,7 +383,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.AdvancedMode = true
 				return m, nil
 			}
-		// --- ADVANCED MODE: Merge and Rebase (IMPROVED) ---
+		// --- ADVANCED MODE: Merge and Rebase ---
 		case "M":
 			if m.CurrentView == model.FileView && m.AdvancedMode {
 				m.CurrentView = model.MergeView
@@ -387,7 +392,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.LogLines = nil
 				m.Message = fmt.Sprintf("Current branch: %s - Select target branch to merge INTO", m.CurrentBranch)
 				m.MessageType = "info"
-				// Ensure branches are loaded
 				if len(m.Branches) == 0 {
 					m.RefreshData()
 				}
@@ -401,7 +405,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.Message = fmt.Sprintf("Current branch: %s - Select base branch to rebase ONTO", m.CurrentBranch)
 				m.MessageType = "info"
 				m.LogLines = nil
-				// Ensure branches are loaded
 				if len(m.Branches) == 0 {
 					m.RefreshData()
 				}
@@ -419,6 +422,18 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.MessageType = "success"
 				return m, nil
 			}
+
+		case "tab":
+			if m.CurrentView == model.AddRemoteView {
+				if m.InputField == "name" {
+					m.InputField = "url"
+				} else if m.InputField == "url" {
+					m.InputField = "name"
+				} else {
+					m.InputField = "name"
+				}
+			}
+			return m, nil
 
 		case "esc":
 			if m.AdvancedMode {
@@ -476,6 +491,27 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				}
 				return m, nil
 
+			case model.AddRemoteView:
+				if m.InputField == "name" && m.RemoteName != "" {
+					m.InputField = "url"
+				} else if m.InputField == "url" && m.RemoteURL != "" {
+					if err := git.AddRemote(m.RemoteName, m.RemoteURL); err != nil {
+						m.Message = fmt.Sprintf("✗ Error adding remote: %s", err)
+						m.MessageType = "error"
+					} else {
+						m.Message = fmt.Sprintf("✓ Remote %s added successfully", m.RemoteName)
+						m.MessageType = "success"
+						m.CurrentView = model.RemoteView
+						m.RemoteName = ""
+						m.RemoteURL = ""
+						m.InputField = ""
+						m.RefreshData()
+					}
+				} else if m.InputField == "" {
+					m.InputField = "name"
+				}
+				return m, nil
+
 			case model.BranchView:
 				if len(m.Branches) > 0 {
 					if m.Cursor >= len(m.Branches) {
@@ -510,17 +546,23 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				if len(m.NewBranchName) > 0 {
 					m.NewBranchName = m.NewBranchName[:len(m.NewBranchName)-1]
 				}
+			case model.AddRemoteView:
+				if m.InputField == "name" && len(m.RemoteName) > 0 {
+					m.RemoteName = m.RemoteName[:len(m.RemoteName)-1]
+				} else if m.InputField == "url" && len(m.RemoteURL) > 0 {
+					m.RemoteURL = m.RemoteURL[:len(m.RemoteURL)-1]
+				}
 			}
 			return m, nil
 
 		case "up":
-			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView && m.Cursor > 0 {
+			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView && m.CurrentView != model.AddRemoteView && m.Cursor > 0 {
 				m.Cursor--
 			}
 			return m, nil
 
 		case "down":
-			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView {
+			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView && m.CurrentView != model.AddRemoteView {
 				switch m.CurrentView {
 				case model.FileView:
 					if m.Cursor < len(m.Files)-1 {
@@ -554,6 +596,17 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			}
 		}
 
+		if m.CurrentView == model.AddRemoteView {
+			if len(msg.Runes) == 1 && utils.IsPrintableChar(msg.Runes[0]) {
+				if m.InputField == "name" {
+					m.RemoteName += string(msg.Runes)
+				} else if m.InputField == "url" {
+					m.RemoteURL += string(msg.Runes)
+				}
+				return m, nil
+			}
+		}
+
 		if m.CurrentView == model.BranchView {
 			switch msg.String() {
 			case "n":
@@ -576,6 +629,26 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			}
 		}
 
+		if m.CurrentView == model.RemoteView {
+			switch msg.String() {
+			case "n":
+				m.CurrentView = model.AddRemoteView
+				m.RemoteName = ""
+				m.RemoteURL = ""
+				m.InputField = "name"
+				return m, nil
+			case "d":
+				if len(m.Remotes) > 0 && m.Cursor < len(m.Remotes) {
+					toDel := m.Remotes[m.Cursor]
+					remoteName := strings.Split(toDel, " -> ")[0]
+					m.DialogType = "delete_remote"
+					m.DialogTarget = remoteName
+					m.CurrentView = model.ConfirmDialog
+				}
+				return m, nil
+			}
+		}
+
 		if m.CurrentView == model.FileView {
 			switch msg.String() {
 			case " ":
@@ -591,7 +664,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					}
 					m.MessageType = "success"
 				} else {
-					// Resetear cursor y mostrar mensaje apropiado
 					if len(m.Files) > 0 {
 						m.Cursor = 0
 					} else {
@@ -663,7 +735,6 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					return m, tea.Batch(performPull(), spinner())
 				}
 			case "L":
-				// Open interactive Git log graph view
 				m, cmd := OpenLogGraphView(m)
 				return m, cmd
 
