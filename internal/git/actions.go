@@ -154,3 +154,42 @@ func RebaseAbort() error {
 	_, err := NewGitClient("").runGitCommandCombinedOutput("rebase", "--abort")
 	return err
 }
+
+func StashApply(stashRef string) error {
+	return NewGitClient("").StashApply(stashRef)
+}
+
+func (g *GitClient) StashApply(stashRef string) error {
+	_, err := g.runGitCommandCombinedOutput("stash", "apply", stashRef)
+	return err
+}
+
+func StashDrop(stashRef string) error {
+	return NewGitClient("").StashDrop(stashRef)
+}
+
+func (g *GitClient) StashDrop(stashRef string) error {
+	_, err := g.runGitCommandCombinedOutput("stash", "drop", stashRef)
+	return err
+}
+
+func StashShow(stashRef string) (string, error) {
+	return NewGitClient("").StashShow(stashRef)
+}
+
+func (g *GitClient) StashShow(stashRef string) (string, error) {
+	output, err := g.runGitCommand("stash", "show", "-p", stashRef)
+	if err != nil {
+		return "", fmt.Errorf("failed to show stash: %w", err)
+	}
+	return string(output), nil
+}
+
+// GetStashRef extracts stash reference from stash list line
+func GetStashRef(stashLine string) string {
+	parts := strings.Split(stashLine, ":")
+	if len(parts) > 0 {
+		return strings.TrimSpace(parts[0])
+	}
+	return "stash@{0}"
+}

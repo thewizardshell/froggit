@@ -50,6 +50,10 @@ func Render(m model.Model) string {
 		sb.WriteString(view.RenderMergeView(m))
 	case model.RebaseView:
 		sb.WriteString(view.RenderRebaseView(m))
+	case model.StashView:
+		sb.WriteString(view.RenderStashView(m))
+	case model.StashMessageView:
+		sb.WriteString(view.RenderStashMessageView(m))
 	}
 
 	if m.Message != "" {

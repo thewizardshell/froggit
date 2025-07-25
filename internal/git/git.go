@@ -4,9 +4,9 @@ import (
 	"os/exec"
 )
 
-// IsGitRepository returns true if current folder is a Git repository
+// IsGitRepository returns true if current folder is within a Git repository
 func IsGitRepository() bool {
-	_, err := exec.Command("git", "rev-parse", "--git-dir").Output()
+	_, err := exec.Command("git", "rev-parse", "--show-toplevel").Output()
 	return err == nil
 }
 
@@ -14,4 +14,3 @@ func IsGitRepository() bool {
 func InitRepository() error {
 	return exec.Command("git", "init").Run()
 }
-

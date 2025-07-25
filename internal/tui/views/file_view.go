@@ -64,6 +64,7 @@ func RenderFileView(m model.Model) string {
 			"[L] log graph",
 			"[M] merge",
 			"[R] rebase",
+			"[S] stash",
 			"[esc] exit advanced",
 			"[?] help",
 		}

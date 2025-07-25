@@ -125,6 +125,16 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			return handlers.HandleRebaseView(m, msg)
 		}
 
+		// --- StashView controls ---
+		if m.CurrentView == model.StashView {
+			return handlers.HandleStashView(m, msg)
+		}
+
+		// --- StashMessageView controls ---
+		if m.CurrentView == model.StashMessageView {
+			return handlers.HandleStashMessageView(m, msg)
+		}
+
 		if m.CurrentView == model.ConfirmDialog {
 			switch msg.String() {
 			case "y":
@@ -156,6 +166,17 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 						m.MessageType = "success"
 						m.RefreshData()
 					}
+				case "drop_stash":
+					if err := git.StashDrop(m.DialogTarget); err != nil {
+						m.Message = fmt.Sprintf("✗ Error dropping stash: %s", err)
+						m.MessageType = "error"
+					} else {
+						m.Message = "✓ Stash dropped successfully"
+						m.MessageType = "success"
+						m.RefreshData()
+					}
+					m.CurrentView = model.StashView
+					return m, nil
 				}
 				m.CurrentView = model.FileView
 				return m, nil
@@ -176,7 +197,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.AdvancedMode = true
 				return m, nil
 			}
-		// --- ADVANCED MODE: Merge and Rebase ---
+		// --- ADVANCED MODE: Merge, Rebase, and Stash ---
 		case "M":
 			if m.CurrentView == model.FileView && m.AdvancedMode {
 				m.CurrentView = model.MergeView
@@ -201,6 +222,16 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				if len(m.Branches) == 0 {
 					m.RefreshData()
 				}
+				return m, nil
+			}
+		case "S":
+			if m.CurrentView == model.FileView && m.AdvancedMode {
+				m.CurrentView = model.StashView
+				m.Cursor = 0
+				m.Message = ""
+				m.MessageType = ""
+				// Refresh stash data
+				m.RefreshData()
 				return m, nil
 			}
 		case "a":

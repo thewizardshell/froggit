@@ -130,4 +130,12 @@ var (
 	MainContentStyle = lipgloss.NewStyle().
 				Width(80).
 				Height(25)
+
+	SubHeaderStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("6")).
+			Bold(true)
+
+	CursorStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("15")).
+			Background(lipgloss.Color("6"))
 )

@@ -6,6 +6,7 @@ package model
 import (
 	"froggit/internal/gh"
 	"froggit/internal/git"
+	"strings"
 )
 
 type View int
@@ -25,6 +26,8 @@ const (
 	GitHubControlsView
 	MergeView
 	RebaseView
+	StashView
+	StashMessageView
 )
 
 type Model struct {
@@ -67,6 +70,12 @@ type Model struct {
 	MergeStep           string // "select", "confirm", "conflict"
 	RebaseStep          string // "select", "confirm", "conflict"
 
+	// Stash data
+	Stashes       []string
+	StashMessage  string
+	SelectedStash int
+	IsStashing    bool
+
 	DialogType   string
 	DialogTarget string
 
@@ -106,6 +115,10 @@ func InitialModel() Model {
 		DialogTarget:     "",
 		AdvancedMode:     false,
 		AwaitingPush:     false,
+		Stashes:          []string{},
+		StashMessage:     "",
+		SelectedStash:    0,
+		IsStashing:       false,
 	}
 }
 
@@ -147,6 +160,30 @@ func (m *Model) RefreshData() {
 	m.Remotes = <-remotesCh
 	m.CurrentBranch = current
 	m.HasRemoteChanges = <-hasRemoteChangesCh
+
+	// Add stash refresh
+	stashesCh := make(chan []string)
+	go func() {
+		stashOutput, _ := git.StashList()
+		stashes := parseStashList(stashOutput)
+		stashesCh <- stashes
+	}()
+	m.Stashes = <-stashesCh
+}
+
+// parseStashList parses the output of git stash list
+func parseStashList(output string) []string {
+	if output == "" {
+		return []string{}
+	}
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	var stashes []string
+	for _, line := range lines {
+		if line != "" {
+			stashes = append(stashes, line)
+		}
+	}
+	return stashes
 }
 
 func (m *Model) SetMergeConflictFiles(files []string) {
