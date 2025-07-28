@@ -53,6 +53,20 @@ func Fetch() error {
 }
 
 func (g *GitClient) Fetch() error {
+	mu.Lock()
+	if operationInProgress {
+		mu.Unlock()
+		return fmt.Errorf("another git operation is already in progress")
+	}
+	operationInProgress = true
+	mu.Unlock()
+
+	defer func() {
+		mu.Lock()
+		operationInProgress = false
+		mu.Unlock()
+	}()
+
 	output, err := g.runGitCommandCombinedOutput("fetch", "--all")
 	if err != nil {
 		return fmt.Errorf("fetch failed: %v - %s", err, string(output))
@@ -65,6 +79,20 @@ func Pull() error {
 }
 
 func (g *GitClient) Pull() error {
+	mu.Lock()
+	if operationInProgress {
+		mu.Unlock()
+		return fmt.Errorf("another git operation is already in progress")
+	}
+	operationInProgress = true
+	mu.Unlock()
+
+	defer func() {
+		mu.Lock()
+		operationInProgress = false
+		mu.Unlock()
+	}()
+
 	output, err := g.runGitCommandCombinedOutput("pull")
 	if err != nil {
 		return fmt.Errorf("pull failed: %v - %s", err, string(output))
@@ -77,6 +105,19 @@ func Push() error {
 }
 
 func (g *GitClient) Push() error {
+	mu.Lock()
+	if operationInProgress {
+		mu.Unlock()
+		return fmt.Errorf("another git operation is already in progress")
+	}
+	operationInProgress = true
+	mu.Unlock()
+
+	defer func() {
+		mu.Lock()
+		operationInProgress = false
+		mu.Unlock()
+	}()
 	output, err := g.runGitCommandCombinedOutput("push")
 	if err == nil {
 		return nil

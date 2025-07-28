@@ -193,3 +193,27 @@ func GetStashRef(stashLine string) string {
 	}
 	return "stash@{0}"
 }
+
+func HasCommitsToush() (bool, error) {
+	return NewGitClient("").HasCommitsToush()
+}
+
+func (g *GitClient) HasCommitsToush() (bool, error) {
+	output, err := g.runGitCommand("rev-list", "--count", "HEAD")
+	if err != nil {
+		return false, nil
+	}
+
+	localCommits := strings.TrimSpace(string(output))
+	if localCommits == "0" {
+		return false, nil
+	}
+
+	output, err = g.runGitCommand("rev-list", "--count", "HEAD", "^@{u}")
+	if err != nil {
+		return localCommits != "0", nil
+	}
+
+	ahead := strings.TrimSpace(string(output))
+	return ahead != "0", nil
+}

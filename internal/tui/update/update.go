@@ -538,11 +538,25 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 				m.Message = "✓ Status updated"
 				m.MessageType = "success"
 			case "p":
+				// Check if there are commits to push
+				hasCommits, err := git.HasCommitsToush()
+				if err != nil {
+					m.Message = fmt.Sprintf("✗ Error checking commits: %s", err)
+					m.MessageType = "error"
+					return m, nil
+				}
+
+				if !hasCommits {
+					m.Message = "⚠ No commits to push"
+					m.MessageType = "error"
+					return m, nil
+				}
+
 				if !m.IsPushing {
 					m.IsPushing = true
 					m.Message = "Pushing..."
 					m.MessageType = "info"
-					return m, tea.Batch(async.PerformFetch(), async.Spinner())
+					return m, tea.Batch(async.PerformPush(), async.Spinner())
 				}
 			case "f":
 				if !m.IsFetching {
@@ -556,7 +570,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					m.IsPulling = true
 					m.Message = "Pulling..."
 					m.MessageType = "info"
-					return m, tea.Batch(async.PerformFetch(), async.Spinner())
+					return m, tea.Batch(async.PerformPull(), async.Spinner())
 				}
 			case "L":
 				m, cmd := OpenLogGraphView(m)
