@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"froggit/internal/git"
 	"froggit/internal/tui/model"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -91,8 +92,9 @@ func HandleStashView(m model.Model, msg tea.KeyMsg) (model.Model, tea.Cmd) {
 				m.Message = fmt.Sprintf("✗ Error viewing stash: %s", err)
 				m.MessageType = "error"
 			} else {
-				// Store diff in LogLines for display
-				m.LogLines = []string{fmt.Sprintf("Stash %s:", stashRef), "", diff}
+				// Store diff in LogLines for display (split by lines)
+				diffLines := strings.Split(diff, "\n")
+				m.LogLines = append([]string{fmt.Sprintf("Stash %s:", stashRef), ""}, diffLines...)
 				m.CurrentView = model.LogGraphView
 				m.Message = fmt.Sprintf("Viewing stash %s (Press Esc to return)", stashRef)
 				m.MessageType = "info"
