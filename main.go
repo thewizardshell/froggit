@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"froggit/internal/config"
 	"froggit/internal/git"
 	tui "froggit/internal/tui"
 	"froggit/internal/tui/model"
@@ -52,7 +53,8 @@ Keyboard Shortcuts:
 )
 
 type App struct {
-	m model.Model
+	M model.Model
+	C config.Config
 }
 
 func (a App) Init() tea.Cmd {
@@ -60,13 +62,13 @@ func (a App) Init() tea.Cmd {
 }
 
 func (a App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	newModel, cmd := update.Update(a.m, msg)
-	a.m = newModel
+	newModel, cmd := update.Update(a.M, msg)
+	a.M = newModel
 	return a, cmd
 }
 
 func (a App) View() string {
-	return tui.Render(a.m)
+	return tui.Render(a.M, a.C)
 }
 
 func main() {
@@ -74,8 +76,16 @@ func main() {
 	helpFlag := flag.Bool("help", false, "Print help information")
 	commandsFlag := flag.Bool("commands", false, "List supported Git commands")
 	keyboardFlag := flag.Bool("keys", false, "List keyboard shortcuts")
-
 	flag.Parse()
+
+	cfg, err := config.LoadConfig("froggit.yml")
+	if err != nil {
+		log.Printf("Warning: Could not load config file: %v\n", err)
+		cfg = config.Config{
+			Ui:  config.UiConfig{Branding: true, Position: "center"},
+			Git: config.GitConfig{DefaultBranch: "main", AutoFetch: true},
+		}
+	}
 
 	if *versionFlag {
 		fmt.Printf("Version: %s\nAuthor: %s\nRepository: %s\n", VERSION, AUTHOR, REPO)
@@ -101,10 +111,13 @@ func main() {
 		tui.QuickStartFlow()
 	}
 
-	app := tui.App{M: model.InitialModel()}
+	app := tui.App{
+		M: model.InitialModel(),
+		C: cfg,
+	}
 
 	p := tea.NewProgram(app, tea.WithAltScreen())
-	if err := p.Start(); err != nil {
+	if _, err := p.Run(); err != nil {
 		log.Fatal(err)
 	}
 }

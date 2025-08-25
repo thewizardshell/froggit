@@ -1,0 +1,17 @@
+# Froggit Configuration File
+
+# UI Configuration
+ui:
+  # Enable or disable branding display
+  branding: false
+
+  # Text alignment position: "left", "center", or "right"
+  position: "center"
+
+# Git Configuration
+git:
+  # Automatically fetch from remote repositories
+  autofetch: true
+
+  # Default branch name for new repositories
+  defaultbranch: "main"

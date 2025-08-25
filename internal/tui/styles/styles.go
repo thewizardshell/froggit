@@ -1,6 +1,10 @@
 package styles
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"froggit/internal/config"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 const (
 	Green        = "76"
@@ -11,6 +15,23 @@ const (
 	Red          = "196"
 	GrayLightest = "252"
 )
+
+func GetAlignStyle(cfg config.Config) lipgloss.Style {
+	style := lipgloss.NewStyle()
+
+	switch cfg.Ui.Position {
+	case "center":
+		style = style.Align(lipgloss.Center)
+	case "right":
+		style = style.Align(lipgloss.Right)
+	case "left":
+		style = style.Align(lipgloss.Left)
+	default:
+		style = style.Align(lipgloss.Left)
+	}
+
+	return style
+}
 
 var (
 	TitleStyle = lipgloss.NewStyle().

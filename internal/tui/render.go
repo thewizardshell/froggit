@@ -2,25 +2,29 @@ package tui
 
 import (
 	"fmt"
-	"strings"
-
+	"froggit/internal/config"
 	"froggit/internal/tui/branding"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 	view "froggit/internal/tui/views"
+	"os"
+	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 )
 
-// Render builds all the TUI output given a model.Model.
-// You call it from your main: fmt.Println(tui.Render(m))
-func Render(m model.Model) string {
+func Render(m model.Model, cfg config.Config) string {
 	var sb strings.Builder
 
-	sb.WriteString(styles.TitleStyle.Render(branding.RenderTitle()) + "\n\n")
-	sb.WriteString(fmt.Sprintf(" current branch: %s\n\n",
+	if cfg.Ui.Branding {
+		sb.WriteString(styles.TitleStyle.Render(branding.RenderTitle()) + "\n\n")
+	}
+
+	sb.WriteString(fmt.Sprintf(" current branch: %s\n\n",
 		styles.HeaderStyle.Render(m.CurrentBranch),
 	))
 
-	// Selección de vista
 	switch m.CurrentView {
 	case model.FileView:
 		sb.WriteString(view.RenderFileView(m))
@@ -68,17 +72,61 @@ func Render(m model.Model) string {
 		}
 	}
 
-	// Spinners
 	if m.IsFetching {
 		sb.WriteString("\n" + styles.SpinnerStyle.Render(
-			fmt.Sprintf(" Fetching... %s", m.SpinnerFrames[m.SpinnerIndex]),
-		))
-	}
-	if m.IsPulling {
-		sb.WriteString("\n" + styles.SpinnerStyle.Render(
-			fmt.Sprintf(" Pulling... %s", m.SpinnerFrames[m.SpinnerIndex]),
+			fmt.Sprintf(" Fetching... %s", m.SpinnerFrames[m.SpinnerIndex]),
 		))
 	}
 
-	return sb.String()
+	if m.IsPulling {
+		sb.WriteString("\n" + styles.SpinnerStyle.Render(
+			fmt.Sprintf(" Pulling... %s", m.SpinnerFrames[m.SpinnerIndex]),
+		))
+	}
+
+	content := sb.String()
+
+	switch strings.ToLower(cfg.Ui.Position) {
+	case "center":
+		return renderCentered(content)
+	case "right":
+		return renderRight(content)
+	default:
+		return content
+	}
+}
+
+func renderCentered(content string) string {
+	width, height, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || width <= 0 {
+		width = 80
+	}
+	if height <= 0 {
+		height = 25
+	}
+
+	lines := strings.Split(content, "\n")
+	numLines := len(lines)
+
+	topPadding := (height - numLines) / 2
+	if topPadding < 0 {
+		topPadding = 0
+	}
+
+	padding := strings.Repeat("\n", topPadding)
+	content = padding + content
+
+	centerStyle := lipgloss.NewStyle().Width(width).Align(lipgloss.Center)
+	return centerStyle.Render(content)
+}
+
+func renderRight(content string) string {
+	width, _, err := term.GetSize(int(os.Stdout.Fd()))
+	if err != nil || width <= 0 {
+		width = 80
+	}
+
+	// Alinear a la derecha usando lipgloss
+	rightStyle := lipgloss.NewStyle().Width(width).Align(lipgloss.Right)
+	return rightStyle.Render(content)
 }
