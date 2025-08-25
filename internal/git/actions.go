@@ -187,9 +187,17 @@ func (g *GitClient) StashShow(stashRef string) (string, error) {
 
 // GetStashRef extracts stash reference from stash list line
 func GetStashRef(stashLine string) string {
+	stashLine = strings.TrimSpace(stashLine)
+	if stashLine == "" {
+		return "stash@{0}"
+	}
 	parts := strings.Split(stashLine, ":")
 	if len(parts) > 0 {
-		return strings.TrimSpace(parts[0])
+		ref := strings.TrimSpace(parts[0])
+		if ref == "" {
+			return "stash@{0}"
+		}
+		return ref
 	}
 	return "stash@{0}"
 }

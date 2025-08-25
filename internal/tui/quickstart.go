@@ -20,7 +20,7 @@ func QuickStartFlow() {
 		hasGh = false
 	}
 
-	fmt.Println("\n\033[1;36m████ Froggit Quick Start ████\033[0m\n")
+	fmt.Print("\n\033[1;36m████ Froggit Quick Start ████\033[0m\n")
 	fmt.Println("You are not in a Git repository. What would you like to do?")
 	fmt.Println("  \033[1;32m1)\033[0m Initialize a new Git repository here")
 	if hasGh {
@@ -28,7 +28,7 @@ func QuickStartFlow() {
 		fmt.Println("  \033[1;35m3)\033[0m Create a new repository on GitHub (requires GitHub CLI)")
 		fmt.Print("\nEnter 1, 2 or 3: ")
 	} else {
-		fmt.Println("\n\033[1;31mGitHub CLI (gh) not found. Only option 1 is available.\033[0m")
+		fmt.Print("\n\033[1;31mGitHub CLI (gh) not found. Only option 1 is available.\033[0m")
 		fmt.Print("\nEnter 1: ")
 	}
 
