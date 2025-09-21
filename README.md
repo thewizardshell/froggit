@@ -196,6 +196,13 @@ For a complete list of shortcuts, see the [keyboard shortcuts documentation](doc
 
 We welcome contributions! Please see our [Contributing Guidelines](docs/contributing.md) for details on how to get started.
 
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=thewizardshell/froggit&type=Date)](https://www.star-history.com/#thewizardshell/froggit&Date)
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
