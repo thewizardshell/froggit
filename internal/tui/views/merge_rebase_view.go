@@ -31,9 +31,6 @@ func RenderMergeView(m model.Model) string {
 		}
 	}
 
-	if m.Message != "" {
-		sb.WriteString("\n" + styles.HelpStyle.Render(m.Message) + "\n")
-	}
 	if len(m.LogLines) > 0 {
 		sb.WriteString(styles.WarningStyle.Render("\nConflicts detected in:") + "\n")
 		for _, file := range m.LogLines {
@@ -72,9 +69,6 @@ func RenderRebaseView(m model.Model) string {
 		}
 	}
 
-	if m.Message != "" {
-		sb.WriteString("\n" + styles.HelpStyle.Render(m.Message) + "\n")
-	}
 	if len(m.LogLines) > 0 {
 		sb.WriteString(styles.WarningStyle.Render("\nConflicts detected in:") + "\n")
 		for _, file := range m.LogLines {
