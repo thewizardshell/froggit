@@ -3,6 +3,7 @@ package config
 import (
 	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
 )
 
 type Config struct {
@@ -20,8 +21,11 @@ type GitConfig struct {
 	DefaultBranch string `yaml:"defaultbranch"`
 }
 
-func LoadConfig(path string) (Config, error) {
-	f, err := os.ReadFile(path)
+func LoadConfig(filename string) (Config, error) {
+	exeDir := getExecutableDir()
+	configPath := filepath.Join(exeDir, filename)
+
+	f, err := os.ReadFile(configPath)
 	if err != nil {
 		return Config{}, err
 	}
@@ -40,4 +44,12 @@ func LoadConfig(path string) (Config, error) {
 	}
 
 	return cfg, nil
+}
+
+func getExecutableDir() string {
+	ex, err := os.Executable()
+	if err != nil {
+		return "."
+	}
+	return filepath.Dir(ex)
 }

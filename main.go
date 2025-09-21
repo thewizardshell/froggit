@@ -80,7 +80,6 @@ func main() {
 
 	cfg, err := config.LoadConfig("froggit.yml")
 	if err != nil {
-		log.Printf("Warning: Could not load config file: %v\n", err)
 		cfg = config.Config{
 			Ui:  config.UiConfig{Branding: true, Position: "center"},
 			Git: config.GitConfig{DefaultBranch: "main", AutoFetch: true},
