@@ -42,7 +42,8 @@ func RenderMergeView(m model.Model) string {
 		sb.WriteString(styles.HelpStyle.Render("[P] Proceed (merge --continue)  [X] Cancel (merge --abort)\n"))
 	}
 
-	controlsWidget := controls.NewMergeViewControls()
+	hasSelection := m.DialogTarget != ""
+	controlsWidget := controls.NewMergeViewControls(hasSelection)
 	sb.WriteString("\n" + controlsWidget.Render())
 
 	return sb.String()
@@ -82,7 +83,8 @@ func RenderRebaseView(m model.Model) string {
 		sb.WriteString(styles.HelpStyle.Render("[P] Proceed (rebase --continue)  [X] Cancel (rebase --abort)\n"))
 	}
 
-	controlsWidget := controls.NewMergeViewControls()
+	hasSelection := m.DialogTarget != ""
+	controlsWidget := controls.NewRebaseViewControls(hasSelection)
 	sb.WriteString("\n" + controlsWidget.Render())
 
 	return sb.String()

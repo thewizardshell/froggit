@@ -183,10 +183,24 @@ func NewCommitViewControls() *ControlSet {
 	return cs
 }
 
-func NewMergeViewControls() *ControlSet {
+func NewMergeViewControls(hasSelection bool) *ControlSet {
 	cs := NewControlSet()
 	cs.Add("↑/↓", "navigate", "navigation")
 	cs.Add("enter", "select branch", "actions")
+	if hasSelection {
+		cs.Add("M", "merge", "actions")
+	}
+	cs.Add("esc", "cancel", "navigation")
+	return cs
+}
+
+func NewRebaseViewControls(hasSelection bool) *ControlSet {
+	cs := NewControlSet()
+	cs.Add("↑/↓", "navigate", "navigation")
+	cs.Add("enter", "select branch", "actions")
+	if hasSelection {
+		cs.Add("R", "rebase", "actions")
+	}
 	cs.Add("esc", "cancel", "navigation")
 	return cs
 }
