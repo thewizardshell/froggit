@@ -1,5 +1,3 @@
-// Package update handles the core message loop for user interactions
-// in the Froggit TUI application, using the Bubble Tea framework.
 package update
 
 import (
@@ -26,7 +24,6 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		cmds = append(cmds, async.PerformAutoFetch(), async.Spinner())
 	}
 
-	// Check for remote changes asynchronously when not auto-fetching
 	if !cfg.Git.AutoFetch && m.CurrentView == model.FileView && m.CurrentBranch != "" && !m.HasRemoteChanges {
 		cmds = append(cmds, async.PerformRemoteChangesCheck(m.CurrentBranch))
 	}
@@ -100,7 +97,44 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 
 	case tea.KeyMsg:
 
-		// --- Repository List Navigation ---
+		if m.CurrentView == model.QuickStartView {
+			switch msg.String() {
+			case "up":
+				if m.Cursor > 0 {
+					m.Cursor--
+				}
+				return m, nil
+			case "down":
+				maxOptions := 3
+				if m.Cursor < maxOptions-1 {
+					m.Cursor++
+				}
+				return m, nil
+			case "enter":
+					if m.Cursor == 0 || (m.Cursor == 1 && m.HasGitHubCLI) || (m.Cursor == 2 && m.HasGitHubCLI) {
+					return m, tea.Quit
+				}
+				return m, nil
+			case "1":
+				m.Cursor = 0
+				return m, tea.Quit
+			case "2":
+				if m.HasGitHubCLI {
+					m.Cursor = 1
+					return m, tea.Quit
+				}
+				return m, nil
+			case "3":
+				if m.HasGitHubCLI {
+					m.Cursor = 2
+					return m, tea.Quit
+				}
+				return m, nil
+			case "q":
+				return m, tea.Quit
+			}
+		}
+
 		if m.CurrentView == model.RepositoryListView {
 			switch msg.String() {
 			case "up":
@@ -129,22 +163,18 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 			return HandleLogGraphKey(m, msg)
 		}
 
-		// --- MergeView controls ---
 		if m.CurrentView == model.MergeView {
 			return handlers.HandleMergeView(m, msg)
 		}
 
-		// --- RebaseView controls ---
 		if m.CurrentView == model.RebaseView {
 			return handlers.HandleRebaseView(m, msg)
 		}
 
-		// --- StashView controls ---
 		if m.CurrentView == model.StashView {
 			return handlers.HandleStashView(m, msg)
 		}
 
-		// --- StashMessageView controls ---
 		if m.CurrentView == model.StashMessageView {
 			return handlers.HandleStashMessageView(m, msg)
 		}
@@ -211,7 +241,6 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				m.AdvancedMode = true
 				return m, nil
 			}
-		// --- ADVANCED MODE: Merge, Rebase, and Stash ---
 		case "M":
 			if m.CurrentView == model.FileView && m.AdvancedMode {
 				m.CurrentView = model.MergeView
@@ -244,7 +273,6 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				m.Cursor = 0
 				m.Message = ""
 				m.MessageType = ""
-				// Refresh stash data
 				m.RefreshData()
 				return m, nil
 			}
@@ -552,7 +580,6 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				m.Message = "✓ Status updated"
 				m.MessageType = "success"
 			case "p":
-				// Check if there are commits to push
 				hasCommits, err := git.HasCommitsToush()
 				if err != nil {
 					m.Message = fmt.Sprintf("✗ Error checking commits: %s", err)
@@ -618,7 +645,6 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 			m.SpinnerIndex = (m.SpinnerIndex + 1) % len(m.SpinnerFrames)
 			return m, async.Spinner()
 		}
-		// Stop spinner if no operations are running
 		return m, nil
 
 	case async.PushMsg:
@@ -637,13 +663,11 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		}
 
 	case async.FetchMsg:
-		// Debug: Force message update to verify FetchMsg is received
 		m.IsFetching = false
 		if msg.Err != nil {
 			m.Message = fmt.Sprintf("✗ Error fetching changes: %s", msg.Err)
 			m.MessageType = "error"
 		} else {
-			// Always show completion message for now (debug)
 			m.Message = "✓ Changes fetched successfully"
 			m.MessageType = "success"
 			m.RefreshData()

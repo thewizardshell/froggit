@@ -12,7 +12,7 @@ type Config struct {
 
 type UiConfig struct {
 	Branding bool   `yaml:"branding"`
-	Position string `yaml:"position"` // "left", "center", "right"
+	Position string `yaml:"position"`
 }
 
 type GitConfig struct {

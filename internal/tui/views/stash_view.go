@@ -2,12 +2,12 @@ package view
 
 import (
 	"fmt"
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 	"strings"
 )
 
-// RenderStashView renders the stash management view
 func RenderStashView(m model.Model) string {
 	var sb strings.Builder
 
@@ -17,7 +17,6 @@ func RenderStashView(m model.Model) string {
 		sb.WriteString(styles.WarningStyle.Render("⚠ You have unstaged changes that can be stashed") + "\n\n")
 	}
 
-	// Stash list
 	if len(m.Stashes) == 0 {
 		sb.WriteString(styles.HelpStyle.Render("No stashes found. Create one with [S] Save stash") + "\n\n")
 	} else {
@@ -29,7 +28,6 @@ func RenderStashView(m model.Model) string {
 				cursor = "❯ "
 			}
 
-			// Parse stash info
 			stashInfo := parseStashInfo(stash)
 			line := fmt.Sprintf("%s%s", cursor, stashInfo)
 
@@ -60,34 +58,12 @@ func RenderStashView(m model.Model) string {
 		sb.WriteString(styles.HelpStyle.Render(fmt.Sprintf("%s Processing stash operation...", m.SpinnerFrames[m.SpinnerIndex])) + "\n\n")
 	}
 
-	// Controls
-	controls := []string{}
-
-	if hasUnstagedChanges(m) {
-		controls = append(controls, "[S] Save stash")
-	}
-
-	if len(m.Stashes) > 0 {
-		controls = append(controls,
-			"[Enter] Apply stash",
-			"[P] Pop stash",
-			"[D] Drop stash",
-			"[V] View stash",
-		)
-	}
-
-	controls = append(controls, "[↑/↓] Navigate", "[Esc] Back", "[?] Help")
-
-	controlsLine := "  " + strings.Join(controls, "  ")
-	sb.WriteString(styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n") +
-			styles.HelpStyle.Render(controlsLine),
-	))
+	controlsWidget := controls.NewStashViewControls(hasUnstagedChanges(m), len(m.Stashes) > 0)
+	sb.WriteString(controlsWidget.Render())
 
 	return sb.String()
 }
 
-// RenderStashMessageView renders the stash message input view
 func RenderStashMessageView(m model.Model) string {
 	var sb strings.Builder
 
@@ -95,7 +71,6 @@ func RenderStashMessageView(m model.Model) string {
 
 	sb.WriteString(styles.SubHeaderStyle.Render("Enter stash message (optional):") + "\n")
 
-	// Input field with cursor
 	inputDisplay := m.StashMessage
 	if len(inputDisplay) == 0 {
 		inputDisplay = "Work in progress..."
@@ -105,7 +80,6 @@ func RenderStashMessageView(m model.Model) string {
 	sb.WriteString(styles.HelpStyle.Render("📝 This will stash all your current changes") + "\n")
 	sb.WriteString(styles.HelpStyle.Render("   including both staged and unstaged files") + "\n\n")
 
-	// Status message
 	if m.Message != "" {
 		switch m.MessageType {
 		case "error":
@@ -115,16 +89,8 @@ func RenderStashMessageView(m model.Model) string {
 		}
 	}
 
-	controls := []string{
-		"[Enter] Save stash",
-		"[Esc] Cancel",
-		"[Backspace] Delete char",
-	}
-	controlsLine := "  " + strings.Join(controls, "  ")
-	sb.WriteString(styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n") +
-			styles.HelpStyle.Render(controlsLine),
-	))
+	controlsWidget := controls.NewStashMessageViewControls()
+	sb.WriteString(controlsWidget.Render())
 
 	return sb.String()
 }

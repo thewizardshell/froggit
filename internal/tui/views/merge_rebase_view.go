@@ -2,12 +2,12 @@ package view
 
 import (
 	"fmt"
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 	"strings"
 )
 
-// RenderMergeView renders the interactive merge view.
 func RenderMergeView(m model.Model) string {
 	var sb strings.Builder
 
@@ -15,7 +15,7 @@ func RenderMergeView(m model.Model) string {
 	for i, branch := range m.Branches {
 		cursor := "  "
 		if i == m.Cursor {
-			cursor = "❯ " // Clear visual cursor indicator
+			cursor = "❯ "
 		}
 
 		checked := " "
@@ -23,7 +23,6 @@ func RenderMergeView(m model.Model) string {
 			checked = "✓"
 		}
 
-		// Apply style based on selection
 		line := fmt.Sprintf("%s[%s] %s", cursor, checked, branch)
 		if i == m.Cursor {
 			sb.WriteString(styles.SelectedStyle.Render(line) + "\n")
@@ -43,23 +42,12 @@ func RenderMergeView(m model.Model) string {
 		sb.WriteString(styles.HelpStyle.Render("[P] Proceed (merge --continue)  [X] Cancel (merge --abort)\n"))
 	}
 
-	controls := []string{
-		"[↑/↓] Navigate",
-		"[Space] Select",
-		"[M] Merge",
-		"[Esc] Back",
-		"[?] Help",
-	}
-	controlsLine := "  " + strings.Join(controls, "  ")
-	sb.WriteString("\n" + styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n")+
-			styles.HelpStyle.Render(controlsLine),
-	))
+	controlsWidget := controls.NewMergeViewControls()
+	sb.WriteString("\n" + controlsWidget.Render())
 
 	return sb.String()
 }
 
-// RenderRebaseView renders the interactive rebase view.
 func RenderRebaseView(m model.Model) string {
 	var sb strings.Builder
 
@@ -67,7 +55,7 @@ func RenderRebaseView(m model.Model) string {
 	for i, branch := range m.Branches {
 		cursor := "  "
 		if i == m.Cursor {
-			cursor = "❯ " // Clear visual cursor indicator
+			cursor = "❯ "
 		}
 
 		checked := " "
@@ -75,7 +63,6 @@ func RenderRebaseView(m model.Model) string {
 			checked = "✓"
 		}
 
-		// Apply style based on selection
 		line := fmt.Sprintf("%s[%s] %s", cursor, checked, branch)
 		if i == m.Cursor {
 			sb.WriteString(styles.SelectedStyle.Render(line) + "\n")
@@ -95,18 +82,8 @@ func RenderRebaseView(m model.Model) string {
 		sb.WriteString(styles.HelpStyle.Render("[P] Proceed (rebase --continue)  [X] Cancel (rebase --abort)\n"))
 	}
 
-	controls := []string{
-		"[↑/↓] Navigate",
-		"[Space] Select",
-		"[R] Rebase",
-		"[Esc] Back",
-		"[?] Help",
-	}
-	controlsLine := "  " + strings.Join(controls, "  ")
-	sb.WriteString("\n" + styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n")+
-			styles.HelpStyle.Render(controlsLine),
-	))
+	controlsWidget := controls.NewMergeViewControls()
+	sb.WriteString("\n" + controlsWidget.Render())
 
 	return sb.String()
 }

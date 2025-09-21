@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 )
@@ -32,10 +33,8 @@ func RenderRemoteView(m model.Model) string {
 		}
 	}
 
-	s.WriteString("\n" + styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n")+
-			styles.HelpStyle.Render("  [↑/↓] navigate  [n] new remote  [d] delete  [Esc] back"),
-	))
+	controlsWidget := controls.NewRemoteViewControls()
+	s.WriteString("\n" + controlsWidget.Render())
 
 	return s.String()
 }

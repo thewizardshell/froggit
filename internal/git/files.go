@@ -7,7 +7,6 @@ import (
 	"strings"
 )
 
-// FileItem struct definition stays igual
 type FileItem struct {
 	Name     string
 	Status   string
@@ -15,12 +14,10 @@ type FileItem struct {
 	Selected bool
 }
 
-// GetModifiedFiles returns modified files (public function).
 func GetModifiedFiles() ([]FileItem, error) {
 	return NewGitClient("").GetModifiedFiles()
 }
 
-// Method on GitClient with actual logic
 func (g *GitClient) GetModifiedFiles() ([]FileItem, error) {
 	stagedFiles := make(map[string]bool)
 
@@ -65,12 +62,10 @@ func (g *GitClient) GetModifiedFiles() ([]FileItem, error) {
 	return files, nil
 }
 
-// DiscardChanges public
 func DiscardChanges(filename string) error {
 	return NewGitClient("").DiscardChanges(filename)
 }
 
-// DiscardChanges method
 func (g *GitClient) DiscardChanges(filename string) error {
 	cmd := exec.Command("git", "ls-files", "--error-unmatch", filename)
 	if g.RepoPath != "" {

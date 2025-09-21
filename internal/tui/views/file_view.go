@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/icons"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
@@ -57,34 +58,8 @@ func RenderFileView(m model.Model) string {
 		}
 	}
 
-	var controls []string
-	if m.AdvancedMode {
-		controls = []string{
-			"[↑/↓] navigate",
-			"[L] log graph",
-			"[M] merge",
-			"[R] rebase",
-			"[S] stash",
-			"[esc] exit advanced",
-			"[?] help",
-		}
-	} else {
-		controls = []string{"[↑/↓] navigate", "[space] stage/unstage"}
-		if len(m.Files) > 0 {
-			controls = append(controls, "[x] discard changes")
-		}
-		if stagedCount > 0 {
-			controls = append(controls, "[c] commit")
-		}
-		controls = append(controls, "[?] help")
-	}
-
-	controlsLine := "  " + strings.Join(controls, "  ")
-
-	s.WriteString("\n" + styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n")+
-			styles.HelpStyle.Render(controlsLine),
-	))
+	controlsWidget := controls.NewFileViewControls(stagedCount > 0, len(m.Files) > 0, m.AdvancedMode)
+	s.WriteString("\n" + controlsWidget.Render())
 
 	return s.String()
 }

@@ -1,6 +1,3 @@
-// Package model defines the core application state (Model) for the Froggit TUI.
-// It includes view types, the main Model structure, and helper functions
-// for initializing and refreshing the application state.
 package model
 
 import (
@@ -12,7 +9,8 @@ import (
 type View int
 
 const (
-	FileView View = iota
+	QuickStartView View = iota
+	FileView
 	CommitView
 	BranchView
 	RemoteView
@@ -54,15 +52,12 @@ type Model struct {
 	ShowHelpPanel    bool
 	AdvancedMode     bool
 
-	// LogsGraph data
 	LogLines []string
 
-	// Repositories
 	Repositories      []gh.Repository
 	SelectedRepoIndex int
 	RepoToClone       *gh.Repository
 
-	// Merge/Rebase interactive state
 	SelectedBranch      string   // branch selected for merge/rebase
 	MergeConflictFiles  []string // files in conflict during merge
 	RebaseConflictFiles []string // files in conflict during rebase
@@ -71,7 +66,6 @@ type Model struct {
 	MergeStep           string // "select", "confirm", "conflict"
 	RebaseStep          string // "select", "confirm", "conflict"
 
-	// Stash data
 	Stashes       []string
 	StashMessage  string
 	SelectedStash int
@@ -80,8 +74,10 @@ type Model struct {
 	DialogType   string
 	DialogTarget string
 
-	// Awaiting push after merge/rebase
 	AwaitingPush bool
+
+	QuickStartOptions []string
+	HasGitHubCLI      bool
 }
 
 func InitialModel() Model {
@@ -123,31 +119,26 @@ func InitialModel() Model {
 }
 
 func (m *Model) RefreshData() {
-	// Use goroutines to fetch data in parallel
 	filesCh := make(chan []git.FileItem)
 	branchesCh := make(chan []string)
 	currentCh := make(chan string)
 	remotesCh := make(chan []string)
 	hasRemoteChangesCh := make(chan bool)
 
-	// Files
 	go func() {
 		files, _ := git.GetModifiedFiles()
 		filesCh <- files
 	}()
-	// Branches and current branch
 	go func() {
 		branches, current := git.GetBranches()
 		branchesCh <- branches
 		currentCh <- current
 	}()
-	// Remotes
 	go func() {
 		remotes, _ := git.GetRemotes()
 		remotesCh <- remotes
 	}()
 
-	// Wait for branches to get current branch, then check remote changes without fetch
 	branches := <-branchesCh
 	current := <-currentCh
 	go func() {
@@ -161,7 +152,6 @@ func (m *Model) RefreshData() {
 	m.CurrentBranch = current
 	m.HasRemoteChanges = <-hasRemoteChangesCh
 
-	// Add stash refresh
 	stashesCh := make(chan []string)
 	go func() {
 		stashOutput, _ := git.StashList()
@@ -171,7 +161,6 @@ func (m *Model) RefreshData() {
 	m.Stashes = <-stashesCh
 }
 
-// parseStashList parses the output of git stash list
 func parseStashList(output string) []string {
 	if output == "" {
 		return []string{}

@@ -17,15 +17,19 @@ import (
 func Render(m model.Model, cfg config.Config) string {
 	var sb strings.Builder
 
-	if cfg.Ui.Branding {
+	if cfg.Ui.Branding && m.CurrentView != model.QuickStartView {
 		sb.WriteString(styles.TitleStyle.Render(branding.RenderTitle()) + "\n\n")
 	}
 
-	sb.WriteString(fmt.Sprintf(" current branch: %s\n\n",
-		styles.HeaderStyle.Render(m.CurrentBranch),
-	))
+	if m.CurrentView != model.QuickStartView {
+		sb.WriteString(fmt.Sprintf(" current branch: %s\n\n",
+			styles.HeaderStyle.Render(m.CurrentBranch),
+		))
+	}
 
 	switch m.CurrentView {
+	case model.QuickStartView:
+		sb.WriteString(view.RenderQuickStartView(m))
 	case model.FileView:
 		sb.WriteString(view.RenderFileView(m))
 	case model.CommitView:
@@ -126,7 +130,6 @@ func renderRight(content string) string {
 		width = 80
 	}
 
-	// Alinear a la derecha usando lipgloss
 	rightStyle := lipgloss.NewStyle().Width(width).Align(lipgloss.Right)
 	return rightStyle.Render(content)
 }

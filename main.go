@@ -109,6 +109,9 @@ func main() {
 
 	if !git.IsGitRepository() {
 		tui.QuickStartFlow()
+		if !git.IsGitRepository() {
+			os.Exit(0)
+		}
 	}
 
 	app := tui.App{

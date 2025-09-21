@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 )
@@ -33,10 +34,8 @@ func RenderBranchView(m model.Model) string {
 		s.WriteString(style.Render(line) + "\n")
 	}
 
-	s.WriteString("\n" + styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n")+
-			styles.HelpStyle.Render("  [↑/↓] navigate  [Enter] switch branch  [n] new branch  [d] delete branch  [Esc] back"),
-	))
+	controlsWidget := controls.NewBranchViewControls()
+	s.WriteString("\n" + controlsWidget.Render())
 
 	return s.String()
 }

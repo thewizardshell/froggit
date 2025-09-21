@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// Add stages a file
 func Add(filename string) error {
 	return NewGitClient("").Add(filename)
 }
@@ -15,7 +14,6 @@ func (g *GitClient) Add(filename string) error {
 	return err
 }
 
-// Reset unstages a file
 func Reset(filename string) error {
 	return NewGitClient("").Reset(filename)
 }
@@ -25,7 +23,6 @@ func (g *GitClient) Reset(filename string) error {
 	return err
 }
 
-// Commit creates a commit
 func Commit(message string) error {
 	return NewGitClient("").Commit(message)
 }
@@ -83,12 +80,10 @@ func (g *GitClient) StashList() (string, error) {
 	return string(output), nil
 }
 
-// HasRemoteChanges checks if local branch is behind remote
 func HasRemoteChanges(branch string) (bool, error) {
 	return NewGitClient("").HasRemoteChanges(branch)
 }
 
-// HasRemoteChangesWithFetch checks if local branch is behind remote with optional fetch
 func HasRemoteChangesWithFetch(branch string, doFetch bool) (bool, error) {
 	return NewGitClient("").HasRemoteChangesWithFetch(branch, doFetch)
 }
@@ -113,7 +108,6 @@ func (g *GitClient) HasRemoteChangesWithFetch(branch string, doFetch bool) (bool
 	return count != "0", nil
 }
 
-// LogsGraph returns a graph view of logs
 func LogsGraph() (string, error) {
 	return NewGitClient("").LogsGraph()
 }
@@ -126,7 +120,6 @@ func (g *GitClient) LogsGraph() (string, error) {
 	return string(output), nil
 }
 
-// GetConflictFiles devuelve los archivos en conflicto usando git diff --name-only --diff-filter=U
 func GetConflictFiles() ([]string, error) {
 	output, err := NewGitClient("").runGitCommand("diff", "--name-only", "--diff-filter=U")
 	if err != nil {
@@ -142,25 +135,21 @@ func GetConflictFiles() ([]string, error) {
 	return files, nil
 }
 
-// MergeContinue ejecuta git merge --continue
 func MergeContinue() error {
 	_, err := NewGitClient("").runGitCommandCombinedOutput("merge", "--continue")
 	return err
 }
 
-// MergeAbort ejecuta git merge --abort
 func MergeAbort() error {
 	_, err := NewGitClient("").runGitCommandCombinedOutput("merge", "--abort")
 	return err
 }
 
-// RebaseContinue runs git rebase --continue
 func RebaseContinue() error {
 	_, err := NewGitClient("").runGitCommandCombinedOutput("rebase", "--continue")
 	return err
 }
 
-// RebaseAbort runs git rebase --abort
 func RebaseAbort() error {
 	_, err := NewGitClient("").runGitCommandCombinedOutput("rebase", "--abort")
 	return err
@@ -196,7 +185,6 @@ func (g *GitClient) StashShow(stashRef string) (string, error) {
 	return string(output), nil
 }
 
-// GetStashRef extracts stash reference from stash list line
 func GetStashRef(stashLine string) string {
 	stashLine = strings.TrimSpace(stashLine)
 	if stashLine == "" {

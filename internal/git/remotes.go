@@ -5,7 +5,6 @@ import (
 	"strings"
 )
 
-// GetRemotes public function
 func GetRemotes() ([]string, error) {
 	return NewGitClient("").GetRemotes()
 }

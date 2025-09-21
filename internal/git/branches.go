@@ -4,12 +4,10 @@ import (
 	"strings"
 )
 
-// GetBranches public function
 func GetBranches() ([]string, string) {
 	return NewGitClient("").GetBranches()
 }
 
-// GetBranches method
 func (g *GitClient) GetBranches() ([]string, string) {
 	output, err := g.runGitCommand("branch")
 	if err != nil {

@@ -5,16 +5,12 @@ import (
 	"strings"
 )
 
-// GitClient holds repo info for running commands.
 type GitClient struct {
 	RepoPath string
 }
 
-// NewGitClient creates a new GitClient instance.
-// repoPath can be empty string to use current working directory.
 func NewGitClient(repoPath string) *GitClient {
 	if repoPath == "" {
-		// Find the git repository root
 		if root, err := findGitRoot(); err == nil {
 			repoPath = root
 		}
@@ -24,7 +20,6 @@ func NewGitClient(repoPath string) *GitClient {
 	}
 }
 
-// findGitRoot finds the root directory of the git repository
 func findGitRoot() (string, error) {
 	cmd := exec.Command("git", "rev-parse", "--show-toplevel")
 	output, err := cmd.Output()

@@ -3,6 +3,7 @@ package view
 import (
 	"strings"
 
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 )
@@ -12,7 +13,6 @@ func RenderAddRemoteView(m model.Model) string {
 
 	s.WriteString(styles.HeaderStyle.Render("➕ Add new remote:") + "\n\n")
 
-	// Campo Name
 	nameLabel := "Name:"
 	if m.InputField == "name" {
 		nameLabel = " " + nameLabel
@@ -28,7 +28,6 @@ func RenderAddRemoteView(m model.Model) string {
 	s.WriteString(styles.HelpStyle.Render(nameLabel) + "\n")
 	s.WriteString(nameStyle.Render(m.RemoteName+"_") + "\n\n")
 
-	// Campo URL
 	urlLabel := "URL:"
 	if m.InputField == "url" {
 		urlLabel = " " + urlLabel
@@ -44,10 +43,8 @@ func RenderAddRemoteView(m model.Model) string {
 	s.WriteString(styles.HelpStyle.Render(urlLabel) + "\n")
 	s.WriteString(urlStyle.Render(m.RemoteURL+"_") + "\n\n")
 
-	s.WriteString(styles.BorderStyle.Render(
-		styles.HelpStyle.Render("Controls:\n") +
-			styles.HelpStyle.Render("  [Tab] switch field  [Enter] confirm/next  [Esc] cancel"),
-	))
+	controlsWidget := controls.NewAddRemoteViewControls()
+	s.WriteString(controlsWidget.Render())
 
 	return s.String()
 }
