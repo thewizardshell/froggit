@@ -88,9 +88,20 @@ func HasRemoteChanges(branch string) (bool, error) {
 	return NewGitClient("").HasRemoteChanges(branch)
 }
 
+// HasRemoteChangesWithFetch checks if local branch is behind remote with optional fetch
+func HasRemoteChangesWithFetch(branch string, doFetch bool) (bool, error) {
+	return NewGitClient("").HasRemoteChangesWithFetch(branch, doFetch)
+}
+
 func (g *GitClient) HasRemoteChanges(branch string) (bool, error) {
-	if err := g.Fetch(); err != nil {
-		return false, err
+	return g.HasRemoteChangesWithFetch(branch, true)
+}
+
+func (g *GitClient) HasRemoteChangesWithFetch(branch string, doFetch bool) (bool, error) {
+	if doFetch {
+		if err := g.FetchWithConfig(true); err != nil {
+			return false, err
+		}
 	}
 
 	output, err := g.runGitCommand("rev-list", "--count", fmt.Sprintf("HEAD..origin/%s", branch))

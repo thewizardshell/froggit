@@ -48,6 +48,7 @@ type Model struct {
 	SpinnerFrames    []string
 	IsFetching       bool
 	IsPulling        bool
+	AutoFetchDone    bool
 	NewBranchName    string
 	HasRemoteChanges bool
 	ShowHelpPanel    bool
@@ -87,7 +88,6 @@ func InitialModel() Model {
 	files, _ := git.GetModifiedFiles()
 	branches, current := git.GetBranches()
 	remotes, _ := git.GetRemotes()
-	hasRemoteChanges, _ := git.HasRemoteChanges(current)
 
 	return Model{
 		Files:            files,
@@ -108,7 +108,7 @@ func InitialModel() Model {
 		IsFetching:       false,
 		IsPulling:        false,
 		NewBranchName:    "",
-		HasRemoteChanges: hasRemoteChanges,
+		HasRemoteChanges: false,
 		ShowHelpPanel:    false,
 		LogLines:         []string{},
 		DialogType:       "",
@@ -147,11 +147,11 @@ func (m *Model) RefreshData() {
 		remotesCh <- remotes
 	}()
 
-	// Wait for branches to get current branch, then check remote changes
+	// Wait for branches to get current branch, then check remote changes without fetch
 	branches := <-branchesCh
 	current := <-currentCh
 	go func() {
-		hasRemoteChanges, _ := git.HasRemoteChanges(current)
+		hasRemoteChanges, _ := git.HasRemoteChangesWithFetch(current, false)
 		hasRemoteChangesCh <- hasRemoteChanges
 	}()
 

@@ -4,6 +4,7 @@ package update
 
 import (
 	"fmt"
+	"froggit/internal/config"
 	"froggit/internal/git"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/update/actions"
@@ -16,13 +17,26 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
+func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
+	if cfg.Git.AutoFetch && m.CurrentView == model.FileView && !m.IsFetching && !m.AutoFetchDone {
+		m.AutoFetchDone = true
+		m.IsFetching = true
+		cmds = append(cmds, async.PerformAutoFetch(), async.Spinner())
+	}
+
+	// Check for remote changes asynchronously when not auto-fetching
+	if !cfg.Git.AutoFetch && m.CurrentView == model.FileView && m.CurrentBranch != "" && !m.HasRemoteChanges {
+		cmds = append(cmds, async.PerformRemoteChangesCheck(m.CurrentBranch))
+	}
+
 	if m.CurrentView == model.ConfirmCloneRepoView {
 		if key, ok := msg.(tea.KeyMsg); ok {
 			var handled bool
 			m, handled = actions.HandleConfirmCloneRepo(m, key.String())
 			if handled {
-				return m, nil
+				return m, tea.Batch(cmds...)
 			}
 		}
 	}
@@ -556,7 +570,7 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 					m.IsPushing = true
 					m.Message = "Pushing..."
 					m.MessageType = "info"
-					return m, tea.Batch(async.PerformPush(), async.Spinner())
+					return m, tea.Batch(async.PerformPushWithConfig(cfg.Git.DefaultBranch), async.Spinner())
 				}
 			case "f":
 				if !m.IsFetching {
@@ -604,6 +618,8 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			m.SpinnerIndex = (m.SpinnerIndex + 1) % len(m.SpinnerFrames)
 			return m, async.Spinner()
 		}
+		// Stop spinner if no operations are running
+		return m, nil
 
 	case async.PushMsg:
 		m.IsPushing = false
@@ -621,11 +637,13 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 		}
 
 	case async.FetchMsg:
+		// Debug: Force message update to verify FetchMsg is received
 		m.IsFetching = false
 		if msg.Err != nil {
 			m.Message = fmt.Sprintf("✗ Error fetching changes: %s", msg.Err)
 			m.MessageType = "error"
 		} else {
+			// Always show completion message for now (debug)
 			m.Message = "✓ Changes fetched successfully"
 			m.MessageType = "success"
 			m.RefreshData()
@@ -643,7 +661,15 @@ func Update(m model.Model, msg tea.Msg) (model.Model, tea.Cmd) {
 			m.RefreshData()
 			utils.ValidateCursor(&m)
 		}
+
+	case async.RemoteChangesCheckMsg:
+		if msg.Err == nil {
+			m.HasRemoteChanges = msg.HasChanges
+		}
 	}
 
+	if len(cmds) > 0 {
+		return m, tea.Batch(cmds...)
+	}
 	return m, nil
 }

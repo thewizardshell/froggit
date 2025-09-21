@@ -10,10 +10,11 @@ import (
 )
 
 type (
-	PushMsg        struct{ Err error }
-	FetchMsg       struct{ Err error }
-	PullMsg        struct{ Err error }
-	SpinnerTickMsg struct{}
+	PushMsg               struct{ Err error }
+	FetchMsg              struct{ Err error }
+	PullMsg               struct{ Err error }
+	SpinnerTickMsg        struct{}
+	RemoteChangesCheckMsg struct{ HasChanges bool; Err error }
 )
 
 // spinner returns a Cmd that emits spinnerTickMsg every 100ms.
@@ -30,10 +31,22 @@ func PerformPush() tea.Cmd {
 	}
 }
 
+func PerformPushWithConfig(defaultBranch string) tea.Cmd {
+	return func() tea.Msg {
+		return PushMsg{Err: git.PushWithBranch(defaultBranch)}
+	}
+}
+
 // performFetch runs git.Fetch asynchronously and returns a fetchMsg.
 func PerformFetch() tea.Cmd {
 	return func() tea.Msg {
 		return FetchMsg{Err: git.Fetch()}
+	}
+}
+
+func PerformAutoFetch() tea.Cmd {
+	return func() tea.Msg {
+		return FetchMsg{Err: git.FetchWithConfig(true)}
 	}
 }
 
@@ -67,5 +80,13 @@ func PerformSwitchAndRebase(sourceBranch, targetBranch string) tea.Cmd {
 			NextAction:   "rebase",
 			SourceBranch: sourceBranch,
 		}
+	}
+}
+
+// PerformRemoteChangesCheck checks for remote changes without blocking startup
+func PerformRemoteChangesCheck(branch string) tea.Cmd {
+	return func() tea.Msg {
+		hasChanges, err := git.HasRemoteChangesWithFetch(branch, false)
+		return RemoteChangesCheckMsg{HasChanges: hasChanges, Err: err}
 	}
 }

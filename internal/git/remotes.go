@@ -53,10 +53,21 @@ func Fetch() error {
 }
 
 func (g *GitClient) Fetch() error {
+	return g.FetchWithConfig(false)
+}
+
+func FetchWithConfig(silent bool) error {
+	return NewGitClient("").FetchWithConfig(silent)
+}
+
+func (g *GitClient) FetchWithConfig(silent bool) error {
 	mu.Lock()
 	if operationInProgress {
 		mu.Unlock()
-		return fmt.Errorf("another git operation is already in progress")
+		if !silent {
+			return fmt.Errorf("another git operation is already in progress")
+		}
+		return nil
 	}
 	operationInProgress = true
 	mu.Unlock()
@@ -67,9 +78,12 @@ func (g *GitClient) Fetch() error {
 		mu.Unlock()
 	}()
 
-	output, err := g.runGitCommandCombinedOutput("fetch", "--all")
+	output, err := g.runGitCommandCombinedOutput("fetch")
 	if err != nil {
-		return fmt.Errorf("fetch failed: %v - %s", err, string(output))
+		if !silent {
+			return fmt.Errorf("fetch failed: %v - %s", err, string(output))
+		}
+		return err
 	}
 	return nil
 }
@@ -105,6 +119,14 @@ func Push() error {
 }
 
 func (g *GitClient) Push() error {
+	return g.PushWithBranch("")
+}
+
+func PushWithBranch(defaultBranch string) error {
+	return NewGitClient("").PushWithBranch(defaultBranch)
+}
+
+func (g *GitClient) PushWithBranch(defaultBranch string) error {
 	mu.Lock()
 	if operationInProgress {
 		mu.Unlock()
@@ -118,25 +140,28 @@ func (g *GitClient) Push() error {
 		operationInProgress = false
 		mu.Unlock()
 	}()
+
 	output, err := g.runGitCommandCombinedOutput("push")
 	if err == nil {
 		return nil
 	}
 
-	// Check if error is due to missing upstream
 	if strings.Contains(string(output), "set the remote as upstream") ||
 		strings.Contains(string(output), "have no upstream branch") ||
 		strings.Contains(string(output), "no upstream branch") {
-		// Get current branch name
-		branchOut, branchErr := g.runGitCommand("branch", "--show-current")
-		if branchErr != nil {
-			return fmt.Errorf("push failed and could not determine current branch: %v", branchErr)
+
+		branch := defaultBranch
+		if branch == "" {
+			branchOut, branchErr := g.runGitCommand("branch", "--show-current")
+			if branchErr != nil {
+				return fmt.Errorf("push failed and could not determine current branch: %v", branchErr)
+			}
+			branch = strings.TrimSpace(string(branchOut))
 		}
-		branch := strings.TrimSpace(string(branchOut))
 		if branch == "" {
 			return fmt.Errorf("push failed and could not determine current branch name")
 		}
-		// Try push with --set-upstream
+
 		output2, err2 := g.runGitCommandCombinedOutput("push", "--set-upstream", "origin", branch)
 		if err2 != nil {
 			return fmt.Errorf("push failed and could not set upstream: %v - %s", err2, string(output2))
