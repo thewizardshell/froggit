@@ -40,6 +40,58 @@ go build
 ./froggit
 ```
 
+## Configuration
+
+Froggit can be customized using a `froggit.yml` configuration file. The configuration file should be placed in the same directory as the Froggit executable.
+
+### Creating Configuration File
+
+Create a `froggit.yml` file next to your Froggit executable with the following structure:
+
+```yaml
+ui:
+  branding: true          # Show Froggit branding (default: true)
+  position: "center"      # UI position: "left", "center", "right" (default: "left")
+
+git:
+  autofetch: true         # Automatically fetch from remote (default: true)
+  defaultbranch: "main"   # Default branch for new repositories (default: "main")
+```
+
+### Configuration Options
+
+#### UI Settings (`ui`)
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `branding` | boolean | `true` | Display Froggit branding and visual elements |
+| `position` | string | `"left"` | UI positioning: `"left"`, `"center"`, or `"right"` |
+
+#### Git Settings (`git`)
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `autofetch` | boolean | `true` | Automatically fetch from remote repositories on startup |
+| `defaultbranch` | string | `"main"` | Default branch name for new repositories and push operations |
+
+### Example Configurations
+
+**Minimal Configuration:**
+```yaml
+git:
+  defaultbranch: "master"
+```
+
+**Full Configuration:**
+```yaml
+ui:
+  branding: false
+  position: "center"
+git:
+  autofetch: false
+  defaultbranch: "develop"
+```
+
+**Note:** If no configuration file is found, Froggit will use the default values shown above.
+
 ## Requirements
 
 - [Git](https://git-scm.com/) installed and accessible in your terminal
