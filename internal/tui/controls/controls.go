@@ -289,3 +289,10 @@ func NewHelpViewControls() *ControlSet {
 	cs.Add("q", "quit", "general")
 	return cs
 }
+
+func NewLogGraphViewControls() *ControlSet {
+	cs := NewControlSet()
+	cs.Add("↑/↓", "navigate", "navigation")
+	cs.Add("esc", "back", "navigation")
+	return cs
+}

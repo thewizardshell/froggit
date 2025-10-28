@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"froggit/internal/tui/controls"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
 )
@@ -21,7 +22,6 @@ func RenderLogGraphView(m model.Model) string {
 	if total == 0 {
 		sb.WriteString(styles.HelpStyle.Render("No commits found\n"))
 	} else {
-		// Determine window start/end so cursor is always visible
 		start := 0
 		if m.Cursor >= viewport/2 {
 			start = m.Cursor - viewport/2
@@ -40,7 +40,6 @@ func RenderLogGraphView(m model.Model) string {
 				style = styles.SelectedStyle
 			}
 
-			// Colourize parts
 			parts := strings.SplitN(line, " ", 3)
 			if len(parts) >= 2 {
 				graph := styles.GraphSymbolStyle.Render(parts[0])
@@ -56,9 +55,11 @@ func RenderLogGraphView(m model.Model) string {
 		}
 	}
 
-	// Controls with position info
-	controls := fmt.Sprintf("[↑/↓] navigate  [esc] back   %d/%d", m.Cursor+1, total)
-	sb.WriteString("\n" + styles.BorderStyle.Render(styles.HelpStyle.Render(controls)))
+	position := fmt.Sprintf("%d/%d", m.Cursor+1, total)
+	sb.WriteString("\n" + styles.HelpStyle.Render(position))
+
+	controlsWidget := controls.NewLogGraphViewControls()
+	sb.WriteString("\n" + controlsWidget.Render())
 
 	return sb.String()
 }
