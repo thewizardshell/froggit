@@ -4,11 +4,36 @@ import (
 	"fmt"
 	"strings"
 
+	"froggit/internal/git"
 	"froggit/internal/tui/controls"
 	"froggit/internal/tui/icons"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
+	"github.com/charmbracelet/lipgloss"
 )
+
+// getFileStatusStyle returns the appropriate style based on file status
+func getFileStatusStyle(file git.FileItem, isSelected bool) lipgloss.Style {
+	// Check if file is added (A) or modified (M)
+	isAdded := strings.Contains(file.Status, "A")
+	isModified := strings.Contains(file.Status, "M")
+
+	if isSelected {
+		if isAdded {
+			return styles.SelectedAddedStyle
+		} else if isModified {
+			return styles.SelectedModifiedStyle
+		}
+		return styles.SelectedStyle
+	} else {
+		if isAdded {
+			return styles.AddedFileStyle
+		} else if isModified {
+			return styles.ModifiedFileStyle
+		}
+		return styles.NormalStyle
+	}
+}
 
 func RenderFileView(m model.Model) string {
 	var s strings.Builder
@@ -23,12 +48,12 @@ func RenderFileView(m model.Model) string {
 		}
 	}
 
-	s.WriteString(styles.HeaderStyle.Render("  Git Status:") + "\n")
-	s.WriteString(fmt.Sprintf("  Staged: %d files\n", stagedCount))
-	s.WriteString(fmt.Sprintf("  Unstaged: %d files\n", unstagedCount))
+	s.WriteString(styles.HeaderStyle.Render("  Git Status:") + "\n")
+	s.WriteString(fmt.Sprintf("  Staged: %d files\n", stagedCount))
+	s.WriteString(fmt.Sprintf("  Unstaged: %d files\n", unstagedCount))
 
 	if m.HasRemoteChanges {
-		s.WriteString(styles.WarningStyle.Render("  New commits are available on the remote please pull\n"))
+		s.WriteString(styles.WarningStyle.Render("  New commits are available on the remote please pull\n"))
 	}
 	s.WriteString("\n")
 	s.WriteString(styles.HeaderStyle.Render(" Modified files:") + "\n\n")
@@ -39,7 +64,7 @@ func RenderFileView(m model.Model) string {
 		for i, file := range m.Files {
 			cursor := "  "
 			if m.Cursor == i {
-				cursor = ""
+				cursor = ""
 			}
 
 			staged := " "
@@ -47,10 +72,8 @@ func RenderFileView(m model.Model) string {
 				staged = "✓"
 			}
 
-			style := styles.NormalStyle
-			if m.Cursor == i {
-				style = styles.SelectedStyle
-			}
+			isSelected := m.Cursor == i
+			style := getFileStatusStyle(file, isSelected)
 
 			icon := icons.GetIconForFile(file.Name)
 			line := fmt.Sprintf("%s [%s] %s %s", cursor, staged, icon, file.Name)

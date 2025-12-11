@@ -14,6 +14,7 @@ const (
 	GrayLight    = "250"
 	Red          = "196"
 	GrayLightest = "252"
+	Orange       = "214"
 )
 
 func GetAlignStyle(cfg config.Config) lipgloss.Style {
@@ -159,4 +160,22 @@ var (
 	CursorStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("15")).
 			Background(lipgloss.Color("6"))
+
+	ModifiedFileStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Orange))
+
+	AddedFileStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color(Green))
+
+	SelectedModifiedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Orange)).
+				Background(lipgloss.Color(GrayDark)).
+				Bold(true).
+				Padding(0, 1)
+
+	SelectedAddedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Green)).
+				Background(lipgloss.Color(GrayDark)).
+				Bold(true).
+				Padding(0, 1)
 )
