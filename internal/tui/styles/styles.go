@@ -15,6 +15,8 @@ const (
 	Red          = "196"
 	GrayLightest = "252"
 	Orange       = "214"
+	Cyan         = "51"
+	Magenta      = "201"
 )
 
 func GetAlignStyle(cfg config.Config) lipgloss.Style {
@@ -175,6 +177,33 @@ var (
 
 	SelectedAddedStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(Green)).
+				Background(lipgloss.Color(GrayDark)).
+				Bold(true).
+				Padding(0, 1)
+
+	ConflictFileStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Red))
+
+	SelectedConflictStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Red)).
+				Background(lipgloss.Color(GrayDark)).
+				Bold(true).
+				Padding(0, 1)
+
+	DeletedFileStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Magenta))
+
+	SelectedDeletedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Magenta)).
+				Background(lipgloss.Color(GrayDark)).
+				Bold(true).
+				Padding(0, 1)
+
+	UntrackedFileStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Cyan))
+
+	SelectedUntrackedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color(Cyan)).
 				Background(lipgloss.Color(GrayDark)).
 				Bold(true).
 				Padding(0, 1)

@@ -529,6 +529,13 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 						m.Message = fmt.Sprintf("✓ File %s removed from stage", f.Name)
 					}
 					m.MessageType = "success"
+					// Refresh files to update status (?, A, M, etc.)
+					files, _ := git.GetModifiedFiles()
+					m.Files = files
+					// Restore cursor position
+					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
+						m.Cursor = len(m.Files) - 1
+					}
 				} else {
 					if len(m.Files) > 0 {
 						m.Cursor = 0
@@ -547,6 +554,12 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					}
 					m.Message = "✓ All files added to stage"
 					m.MessageType = "success"
+					// Refresh files to update status (?, A, M, etc.)
+					files, _ := git.GetModifiedFiles()
+					m.Files = files
+					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
+						m.Cursor = len(m.Files) - 1
+					}
 				} else {
 					m.Message = "⚠ No files to stage"
 					m.MessageType = "warning"

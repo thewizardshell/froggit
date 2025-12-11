@@ -9,27 +9,58 @@ import (
 	"froggit/internal/tui/icons"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/styles"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
+// getFileStatusIndicator returns the status indicator (M, A, C, etc.) for a file
+func getFileStatusIndicator(file git.FileItem) string {
+	if strings.Contains(file.Status, "U") {
+		return "C"
+	} else if strings.Contains(file.Status, "A") {
+		return "A"
+	} else if strings.Contains(file.Status, "M") {
+		return "M"
+	} else if strings.Contains(file.Status, "D") {
+		return "D"
+	} else if strings.Contains(file.Status, "?") {
+		return "?"
+	}
+	return " "
+}
+
 // getFileStatusStyle returns the appropriate style based on file status
 func getFileStatusStyle(file git.FileItem, isSelected bool) lipgloss.Style {
-	// Check if file is added (A) or modified (M)
+	isConflict := strings.Contains(file.Status, "U")
 	isAdded := strings.Contains(file.Status, "A")
 	isModified := strings.Contains(file.Status, "M")
+	isDeleted := strings.Contains(file.Status, "D")
+	isUntracked := strings.Contains(file.Status, "?")
 
 	if isSelected {
-		if isAdded {
+		if isConflict {
+			return styles.SelectedConflictStyle
+		} else if isAdded {
 			return styles.SelectedAddedStyle
 		} else if isModified {
 			return styles.SelectedModifiedStyle
+		} else if isDeleted {
+			return styles.SelectedDeletedStyle
+		} else if isUntracked {
+			return styles.SelectedUntrackedStyle
 		}
 		return styles.SelectedStyle
 	} else {
-		if isAdded {
+		if isConflict {
+			return styles.ConflictFileStyle
+		} else if isAdded {
 			return styles.AddedFileStyle
 		} else if isModified {
 			return styles.ModifiedFileStyle
+		} else if isDeleted {
+			return styles.DeletedFileStyle
+		} else if isUntracked {
+			return styles.UntrackedFileStyle
 		}
 		return styles.NormalStyle
 	}
@@ -76,7 +107,8 @@ func RenderFileView(m model.Model) string {
 			style := getFileStatusStyle(file, isSelected)
 
 			icon := icons.GetIconForFile(file.Name)
-			line := fmt.Sprintf("%s [%s] %s %s", cursor, staged, icon, file.Name)
+			statusIndicator := getFileStatusIndicator(file)
+			line := fmt.Sprintf("%s [%s] %s %s %s", cursor, staged, statusIndicator, icon, file.Name)
 			s.WriteString(style.Render(line) + "\n")
 		}
 	}
