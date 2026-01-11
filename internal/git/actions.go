@@ -205,6 +205,18 @@ func HasCommitsToush() (bool, error) {
 	return NewGitClient("").HasCommitsToush()
 }
 
+func GetStagedDiff() (string, error) {
+	return NewGitClient("").GetStagedDiff()
+}
+
+func (g *GitClient) GetStagedDiff() (string, error) {
+	output, err := g.runGitCommand("diff", "--cached")
+	if err != nil {
+		return "", fmt.Errorf("failed to get staged diff: %w", err)
+	}
+	return string(output), nil
+}
+
 func (g *GitClient) HasCommitsToush() (bool, error) {
 	output, err := g.runGitCommand("rev-list", "--count", "HEAD")
 	if err != nil {

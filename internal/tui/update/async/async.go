@@ -3,6 +3,7 @@ package async
 import (
 	"time"
 
+	"froggit/internal/copilot"
 	"froggit/internal/git"
 	"froggit/internal/tui/update/messages"
 
@@ -15,6 +16,7 @@ type (
 	PullMsg               struct{ Err error }
 	SpinnerTickMsg        struct{}
 	RemoteChangesCheckMsg struct{ HasChanges bool; Err error }
+	AICommitMsg           struct{ Message string; Err error }
 )
 
 // spinner returns a Cmd that emits spinnerTickMsg every 100ms.
@@ -88,5 +90,17 @@ func PerformRemoteChangesCheck(branch string) tea.Cmd {
 	return func() tea.Msg {
 		hasChanges, err := git.HasRemoteChangesWithFetch(branch, false)
 		return RemoteChangesCheckMsg{HasChanges: hasChanges, Err: err}
+	}
+}
+
+// PerformAICommitGeneration generates a commit message using Copilot
+func PerformAICommitGeneration() tea.Cmd {
+	return func() tea.Msg {
+		diff, err := git.GetStagedDiff()
+		if err != nil {
+			return AICommitMsg{Err: err}
+		}
+		msg, err := copilot.GenerateCommitMessage(diff)
+		return AICommitMsg{Message: msg, Err: err}
 	}
 }

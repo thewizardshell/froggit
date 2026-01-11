@@ -111,7 +111,7 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				}
 				return m, nil
 			case "enter":
-					if m.Cursor == 0 || (m.Cursor == 1 && m.HasGitHubCLI) || (m.Cursor == 2 && m.HasGitHubCLI) {
+				if m.Cursor == 0 || (m.Cursor == 1 && m.HasGitHubCLI) || (m.Cursor == 2 && m.HasGitHubCLI) {
 					return m, tea.Quit
 				}
 				return m, nil
@@ -298,8 +298,8 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				} else {
 					m.InputField = "name"
 				}
+				return m, nil
 			}
-			return m, nil
 
 		case "esc":
 			if m.AdvancedMode {
@@ -424,6 +424,9 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		case "up":
 			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView && m.CurrentView != model.AddRemoteView && m.Cursor > 0 {
 				m.Cursor--
+				if m.CurrentView == model.FileView && m.Cursor < m.FileViewOffset {
+					m.FileViewOffset = m.Cursor
+				}
 			}
 			return m, nil
 
@@ -433,6 +436,9 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				case model.FileView:
 					if m.Cursor < len(m.Files)-1 {
 						m.Cursor++
+						if m.Cursor >= m.FileViewOffset+m.FileViewHeight {
+							m.FileViewOffset = m.Cursor - m.FileViewHeight + 1
+						}
 					}
 				case model.BranchView:
 					if m.Cursor < len(m.Branches)-1 {
@@ -449,6 +455,16 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		}
 
 		if m.CurrentView == model.CommitView {
+			switch msg.String() {
+			case "tab":
+				if !m.IsGeneratingAI && m.CopilotAvailable {
+					m.IsGeneratingAI = true
+					m.Message = "Generating AI commit message..."
+					m.MessageType = "info"
+					return m, tea.Batch(async.PerformAICommitGeneration(), async.Spinner())
+				}
+				return m, nil
+			}
 			if len(msg.Runes) == 1 && utils.IsPrintableChar(msg.Runes[0]) {
 				m.CommitMsg += string(msg.Runes)
 				return m, nil
@@ -654,9 +670,21 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		}
 
 	case async.SpinnerTickMsg:
-		if m.IsPushing || m.IsFetching || m.IsPulling {
+		if m.IsPushing || m.IsFetching || m.IsPulling || m.IsGeneratingAI {
 			m.SpinnerIndex = (m.SpinnerIndex + 1) % len(m.SpinnerFrames)
 			return m, async.Spinner()
+		}
+		return m, nil
+
+	case async.AICommitMsg:
+		m.IsGeneratingAI = false
+		if msg.Err != nil {
+			m.Message = fmt.Sprintf("✗ AI error: %s", msg.Err)
+			m.MessageType = "error"
+		} else {
+			m.CommitMsg = msg.Message
+			m.Message = "✓ AI generated commit message"
+			m.MessageType = "success"
 		}
 		return m, nil
 

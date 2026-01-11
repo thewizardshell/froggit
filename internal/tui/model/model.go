@@ -1,6 +1,7 @@
 package model
 
 import (
+	"froggit/internal/copilot"
 	"froggit/internal/gh"
 	"froggit/internal/git"
 	"strings"
@@ -71,6 +72,12 @@ type Model struct {
 	SelectedStash int
 	IsStashing    bool
 
+	FileViewOffset int
+	FileViewHeight int
+
+	IsGeneratingAI   bool
+	CopilotAvailable bool
+
 	DialogType   string
 	DialogTarget string
 
@@ -115,6 +122,9 @@ func InitialModel() Model {
 		StashMessage:     "",
 		SelectedStash:    0,
 		IsStashing:       false,
+		CopilotAvailable: copilot.IsAvailable(),
+		FileViewOffset:   0,
+		FileViewHeight:   5,
 	}
 }
 
