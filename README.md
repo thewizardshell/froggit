@@ -125,8 +125,34 @@ git:
 | Create repository | 🟢 | Create new GitHub repository |
 | Clone repository | 🟢 | Clone from your GitHub repositories |
 
+### GitHub Copilot Integration
+| Feature | Status | Description |
+|---------|--------|-------------|
+| AI commit messages | 🟢 | Generate commit messages with Copilot |
+
 🟢 Supported &nbsp;&nbsp; 🟡 In Development &nbsp;&nbsp; 🔴 Planned
 
+
+## GitHub Copilot Integration
+
+Froggit can generate AI-powered commit messages using your existing GitHub Copilot subscription.
+
+### Requirements
+
+You need to have GitHub Copilot authenticated through one of these:
+- **VS Code** with GitHub Copilot extension
+- **copilot.vim** or **copilot.lua** for Neovim
+- Any editor that stores Copilot tokens in `~/.config/github-copilot/`
+
+### Usage
+
+1. Stage your changes
+2. Press `c` to enter commit view
+3. Press `Tab` to generate an AI commit message
+
+Froggit automatically detects if Copilot is available and shows the option in the commit view.
+
+> **Note:** No additional API keys needed - Froggit uses your existing Copilot authentication.
 
 ## GitHub CLI Integration
 
