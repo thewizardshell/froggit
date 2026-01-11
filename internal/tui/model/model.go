@@ -124,7 +124,7 @@ func InitialModel() Model {
 		IsStashing:       false,
 		CopilotAvailable: copilot.IsAvailable(),
 		FileViewOffset:   0,
-		FileViewHeight:   5,
+		FileViewHeight:   8,
 	}
 }
 

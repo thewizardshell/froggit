@@ -28,8 +28,11 @@ func Commit(message string) error {
 }
 
 func (g *GitClient) Commit(message string) error {
-	_, err := g.runGitCommandCombinedOutput("commit", "-m", message)
-	return err
+	output, err := g.runGitCommandCombinedOutput("commit", "-m", message)
+	if err != nil {
+		return fmt.Errorf("%w: %s", err, strings.TrimSpace(string(output)))
+	}
+	return nil
 }
 
 func Merge(branch string) error {
