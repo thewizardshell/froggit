@@ -19,7 +19,28 @@ func Reset(filename string) error {
 }
 
 func (g *GitClient) Reset(filename string) error {
-	_, err := g.runGitCommandCombinedOutput("reset", "HEAD", filename)
+	// First check if repository has any commits at all
+	_, err := g.runGitCommand("rev-parse", "HEAD")
+	hasCommits := err == nil
+
+	if !hasCommits {
+		// No commits yet in repo, must use rm --cached
+		_, err := g.runGitCommandCombinedOutput("rm", "--cached", filename)
+		return err
+	}
+
+	// Check if file exists in HEAD (was committed before)
+	_, err = g.runGitCommand("cat-file", "-e", "HEAD:"+filename)
+	existsInHead := err == nil
+
+	if !existsInHead {
+		// File is new (not in any commit), use rm --cached
+		_, err := g.runGitCommandCombinedOutput("rm", "--cached", filename)
+		return err
+	}
+
+	// File exists in HEAD, safe to use reset HEAD
+	_, err = g.runGitCommandCombinedOutput("reset", "HEAD", filename)
 	return err
 }
 

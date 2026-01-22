@@ -536,6 +536,7 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 			case " ":
 				if len(m.Files) > 0 && m.Cursor < len(m.Files) {
 					f := &m.Files[m.Cursor]
+					currentFileName := f.Name
 					f.Staged = !f.Staged
 					if f.Staged {
 						git.Add(f.Name)
@@ -548,7 +549,14 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					// Refresh files to update status (?, A, M, etc.)
 					files, _ := git.GetModifiedFiles()
 					m.Files = files
-					// Restore cursor position
+					// Restore cursor to the same file
+					for i, file := range m.Files {
+						if file.Name == currentFileName {
+							m.Cursor = i
+							break
+						}
+					}
+					// Validate cursor is within bounds
 					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
 						m.Cursor = len(m.Files) - 1
 					}
@@ -562,6 +570,10 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				}
 			case "a":
 				if len(m.Files) > 0 {
+					currentFileName := ""
+					if m.Cursor < len(m.Files) {
+						currentFileName = m.Files[m.Cursor].Name
+					}
 					for i := range m.Files {
 						if !m.Files[i].Staged {
 							m.Files[i].Staged = true
@@ -573,6 +585,16 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					// Refresh files to update status (?, A, M, etc.)
 					files, _ := git.GetModifiedFiles()
 					m.Files = files
+					// Restore cursor to the same file
+					if currentFileName != "" {
+						for i, file := range m.Files {
+							if file.Name == currentFileName {
+								m.Cursor = i
+								break
+							}
+						}
+					}
+					// Validate cursor is within bounds
 					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
 						m.Cursor = len(m.Files) - 1
 					}
