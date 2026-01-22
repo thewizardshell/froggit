@@ -5,6 +5,8 @@ go 1.23.5
 require (
 	github.com/charmbracelet/bubbletea v1.3.5
 	github.com/charmbracelet/lipgloss v1.1.0
+	golang.org/x/term v0.34.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -25,7 +27,5 @@ require (
 	github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e // indirect
 	golang.org/x/sync v0.13.0 // indirect
 	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/term v0.34.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

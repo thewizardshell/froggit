@@ -44,6 +44,15 @@ func (cs *ControlSet) AddMultiple(controls []Control) *ControlSet {
 	return cs
 }
 
+func (cs *ControlSet) AddAI(key, description, group string) *ControlSet {
+	cs.controls = append(cs.controls, Control{
+		Key:         key,
+		Description: description,
+		Group:       "ai",
+	})
+	return cs
+}
+
 func (cs *ControlSet) Render() string {
 	if len(cs.controls) == 0 {
 		return ""
@@ -65,8 +74,22 @@ func (cs *ControlSet) renderSimple() string {
 	separatorStyle := lipgloss.NewStyle().
 		Foreground(lipgloss.Color("240"))
 
+	// Purple/magenta style for AI
+	aiKeyStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("171")).
+		Bold(true)
+
+	aiDescStyle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color("171")).
+		Bold(true)
+
 	for _, control := range cs.controls {
-		part := keyStyle.Render(control.Key) + " " + descStyle.Render(control.Description)
+		var part string
+		if control.Group == "ai" {
+			part = aiKeyStyle.Render(control.Key) + " " + aiDescStyle.Render(control.Description)
+		} else {
+			part = keyStyle.Render(control.Key) + " " + descStyle.Render(control.Description)
+		}
 		controlParts = append(controlParts, part)
 	}
 
@@ -175,10 +198,13 @@ func NewRemoteViewControls() *ControlSet {
 	return cs
 }
 
-func NewCommitViewControls() *ControlSet {
+func NewCommitViewControls(copilotAvailable bool, isGenerating bool) *ControlSet {
 	cs := NewControlSet()
 	cs.Add("enter", "commit changes", "actions")
 	cs.Add("backspace", "delete char", "edit")
+	if copilotAvailable && !isGenerating {
+		cs.AddAI("tab", "AI", "ai")
+	}
 	cs.Add("esc", "cancel", "navigation")
 	return cs
 }

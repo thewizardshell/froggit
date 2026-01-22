@@ -111,7 +111,7 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				}
 				return m, nil
 			case "enter":
-					if m.Cursor == 0 || (m.Cursor == 1 && m.HasGitHubCLI) || (m.Cursor == 2 && m.HasGitHubCLI) {
+				if m.Cursor == 0 || (m.Cursor == 1 && m.HasGitHubCLI) || (m.Cursor == 2 && m.HasGitHubCLI) {
 					return m, tea.Quit
 				}
 				return m, nil
@@ -298,8 +298,8 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				} else {
 					m.InputField = "name"
 				}
+				return m, nil
 			}
-			return m, nil
 
 		case "esc":
 			if m.AdvancedMode {
@@ -424,6 +424,9 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		case "up":
 			if m.CurrentView != model.CommitView && m.CurrentView != model.NewBranchView && m.CurrentView != model.AddRemoteView && m.Cursor > 0 {
 				m.Cursor--
+				if m.CurrentView == model.FileView && m.Cursor < m.FileViewOffset {
+					m.FileViewOffset = m.Cursor
+				}
 			}
 			return m, nil
 
@@ -433,6 +436,9 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				case model.FileView:
 					if m.Cursor < len(m.Files)-1 {
 						m.Cursor++
+						if m.Cursor >= m.FileViewOffset+m.FileViewHeight {
+							m.FileViewOffset = m.Cursor - m.FileViewHeight + 1
+						}
 					}
 				case model.BranchView:
 					if m.Cursor < len(m.Branches)-1 {
@@ -449,6 +455,16 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		}
 
 		if m.CurrentView == model.CommitView {
+			switch msg.String() {
+			case "tab":
+				if !m.IsGeneratingAI && m.CopilotAvailable {
+					m.IsGeneratingAI = true
+					m.Message = "Generating AI commit message..."
+					m.MessageType = "info"
+					return m, tea.Batch(async.PerformAICommitGeneration(), async.Spinner())
+				}
+				return m, nil
+			}
 			if len(msg.Runes) == 1 && utils.IsPrintableChar(msg.Runes[0]) {
 				m.CommitMsg += string(msg.Runes)
 				return m, nil
@@ -520,6 +536,7 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 			case " ":
 				if len(m.Files) > 0 && m.Cursor < len(m.Files) {
 					f := &m.Files[m.Cursor]
+					currentFileName := f.Name
 					f.Staged = !f.Staged
 					if f.Staged {
 						git.Add(f.Name)
@@ -532,7 +549,14 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					// Refresh files to update status (?, A, M, etc.)
 					files, _ := git.GetModifiedFiles()
 					m.Files = files
-					// Restore cursor position
+					// Restore cursor to the same file
+					for i, file := range m.Files {
+						if file.Name == currentFileName {
+							m.Cursor = i
+							break
+						}
+					}
+					// Validate cursor is within bounds
 					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
 						m.Cursor = len(m.Files) - 1
 					}
@@ -546,6 +570,10 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 				}
 			case "a":
 				if len(m.Files) > 0 {
+					currentFileName := ""
+					if m.Cursor < len(m.Files) {
+						currentFileName = m.Files[m.Cursor].Name
+					}
 					for i := range m.Files {
 						if !m.Files[i].Staged {
 							m.Files[i].Staged = true
@@ -557,6 +585,16 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					// Refresh files to update status (?, A, M, etc.)
 					files, _ := git.GetModifiedFiles()
 					m.Files = files
+					// Restore cursor to the same file
+					if currentFileName != "" {
+						for i, file := range m.Files {
+							if file.Name == currentFileName {
+								m.Cursor = i
+								break
+							}
+						}
+					}
+					// Validate cursor is within bounds
 					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
 						m.Cursor = len(m.Files) - 1
 					}
@@ -654,9 +692,21 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		}
 
 	case async.SpinnerTickMsg:
-		if m.IsPushing || m.IsFetching || m.IsPulling {
+		if m.IsPushing || m.IsFetching || m.IsPulling || m.IsGeneratingAI {
 			m.SpinnerIndex = (m.SpinnerIndex + 1) % len(m.SpinnerFrames)
 			return m, async.Spinner()
+		}
+		return m, nil
+
+	case async.AICommitMsg:
+		m.IsGeneratingAI = false
+		if msg.Err != nil {
+			m.Message = fmt.Sprintf("✗ AI error: %s", msg.Err)
+			m.MessageType = "error"
+		} else {
+			m.CommitMsg = msg.Message
+			m.Message = "✓ AI generated commit message"
+			m.MessageType = "success"
 		}
 		return m, nil
 

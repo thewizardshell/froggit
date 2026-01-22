@@ -92,7 +92,23 @@ func RenderFileView(m model.Model) string {
 	if len(m.Files) == 0 {
 		s.WriteString(styles.HelpStyle.Render("No modified files\n"))
 	} else {
-		for i, file := range m.Files {
+		totalFiles := len(m.Files)
+		viewHeight := m.FileViewHeight
+		if viewHeight <= 0 {
+			viewHeight = 15
+		}
+
+		if m.FileViewOffset > 0 {
+			s.WriteString(styles.HelpStyle.Render(fmt.Sprintf("  ↑ %d more above\n", m.FileViewOffset)))
+		}
+
+		endIdx := m.FileViewOffset + viewHeight
+		if endIdx > totalFiles {
+			endIdx = totalFiles
+		}
+
+		for i := m.FileViewOffset; i < endIdx; i++ {
+			file := m.Files[i]
 			cursor := "  "
 			if m.Cursor == i {
 				cursor = ""
@@ -110,6 +126,11 @@ func RenderFileView(m model.Model) string {
 			statusIndicator := getFileStatusIndicator(file)
 			line := fmt.Sprintf("%s [%s] %s %s %s", cursor, staged, statusIndicator, icon, file.Name)
 			s.WriteString(style.Render(line) + "\n")
+		}
+
+		remaining := totalFiles - endIdx
+		if remaining > 0 {
+			s.WriteString(styles.HelpStyle.Render(fmt.Sprintf("  ↓ %d more below\n", remaining)))
 		}
 	}
 

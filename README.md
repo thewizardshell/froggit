@@ -1,8 +1,8 @@
 <h1 align="center"> Froggit </h1>
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/d4194260-341d-425c-872d-ae623c1ec189" alt="Froggit Logo" width="400" />
-  
+  <img alt="Froggit Logo" src="https://github.com/user-attachments/assets/601f2345-f903-4e8b-b7b8-c757ba70c41f"  width="400" />
+
   <p><strong>A modern, minimalist Git TUI</strong></p>
   <p>Designed for clarity, speed, and smooth integration with your terminal workflow.</p>
 
@@ -11,7 +11,8 @@
   [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Linux%20%7C%20macOS-2ecc71?style=flat)](#)
   [![Go Version](https://img.shields.io/badge/Go-1.20%2B-145a32?style=flat)](#)
 
-  <img src="https://github.com/user-attachments/assets/7b5a2dd6-fbc3-4035-83fe-a072d2298f57" alt="Froggit preview" width="700" />
+  <img src="https://github.com/user-attachments/assets/a691c6ac-7d67-4b4c-8e50-0816ded7dcc7" alt="Froggit preview" width="800" />
+
 </div>
 
 
@@ -125,8 +126,34 @@ git:
 | Create repository | 🟢 | Create new GitHub repository |
 | Clone repository | 🟢 | Clone from your GitHub repositories |
 
+### GitHub Copilot Integration
+| Feature | Status | Description |
+|---------|--------|-------------|
+| AI commit messages | 🟢 | Generate commit messages with Copilot |
+
 🟢 Supported &nbsp;&nbsp; 🟡 In Development &nbsp;&nbsp; 🔴 Planned
 
+
+## GitHub Copilot Integration
+
+Froggit can generate AI-powered commit messages using your existing GitHub Copilot subscription.
+
+### Requirements
+
+You need to have GitHub Copilot authenticated through one of these:
+- **VS Code** with GitHub Copilot extension
+- **copilot.vim** or **copilot.lua** for Neovim
+- Any editor that stores Copilot tokens in `~/.config/github-copilot/`
+
+### Usage
+
+1. Stage your changes
+2. Press `c` to enter commit view
+3. Press `Tab` to generate an AI commit message
+
+Froggit automatically detects if Copilot is available and shows the option in the commit view.
+
+> **Note:** No additional API keys needed - Froggit uses your existing Copilot authentication.
 
 ## GitHub CLI Integration
 
