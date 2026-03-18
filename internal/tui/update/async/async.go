@@ -93,6 +93,13 @@ func PerformRemoteChangesCheck(branch string) tea.Cmd {
 	}
 }
 
+// PerformMessageClear returns a Cmd that clears the message after 3 seconds.
+func PerformMessageClear(messageID int) tea.Cmd {
+	return tea.Tick(time.Second*3, func(t time.Time) tea.Msg {
+		return messages.MessageClearMsg{MessageID: messageID}
+	})
+}
+
 // PerformAICommitGeneration generates a commit message using Copilot
 func PerformAICommitGeneration() tea.Cmd {
 	return func() tea.Msg {

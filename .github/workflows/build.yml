@@ -32,11 +32,12 @@ jobs:
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 0
         run: |
           mkdir -p dist
           BIN_NAME="froggit-${{ matrix.os }}-${{ matrix.arch }}"
           [[ "${{ matrix.os }}" == "windows" ]] && BIN_NAME="$BIN_NAME.exe"
-          go build -o "$BIN_NAME" .
+          go build -ldflags="-s -w" -o "$BIN_NAME" .
           zip -j "dist/${{ matrix.os }}-${{ matrix.arch }}.zip" "$BIN_NAME"
 
       - name: Upload artifact for release

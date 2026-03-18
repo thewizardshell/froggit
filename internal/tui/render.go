@@ -62,6 +62,8 @@ func Render(m model.Model, cfg config.Config) string {
 		sb.WriteString(view.RenderStashView(m))
 	case model.StashMessageView:
 		sb.WriteString(view.RenderStashMessageView(m))
+	case model.DiffView:
+		sb.WriteString(view.RenderDiffView(m))
 	}
 
 	if m.Message != "" {

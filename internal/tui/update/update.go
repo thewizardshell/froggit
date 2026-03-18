@@ -163,6 +163,28 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 			return HandleLogGraphKey(m, msg)
 		}
 
+		if m.CurrentView == model.DiffView {
+			switch msg.String() {
+			case "esc":
+				m.CurrentView = model.FileView
+				m.DiffLines = nil
+				m.DiffViewOffset = 0
+				return m, nil
+			case "up", "k":
+				if m.DiffViewOffset > 0 {
+					m.DiffViewOffset--
+				}
+				return m, nil
+			case "down", "j":
+				if m.DiffViewOffset < len(m.DiffLines)-1 {
+					m.DiffViewOffset++
+				}
+				return m, nil
+			default:
+				return m, nil
+			}
+		}
+
 		if m.CurrentView == model.MergeView {
 			return handlers.HandleMergeView(m, msg)
 		}
@@ -602,6 +624,44 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					m.Message = "⚠ No files to stage"
 					m.MessageType = "warning"
 				}
+			case "u":
+				hasStaged := false
+				for _, f := range m.Files {
+					if f.Staged {
+						hasStaged = true
+						break
+					}
+				}
+				if hasStaged {
+					currentFileName := ""
+					if m.Cursor < len(m.Files) {
+						currentFileName = m.Files[m.Cursor].Name
+					}
+					for i := range m.Files {
+						if m.Files[i].Staged {
+							m.Files[i].Staged = false
+							git.Reset(m.Files[i].Name)
+						}
+					}
+					m.Message = "✓ All files unstaged"
+					m.MessageType = "success"
+					files, _ := git.GetModifiedFiles()
+					m.Files = files
+					if currentFileName != "" {
+						for i, file := range m.Files {
+							if file.Name == currentFileName {
+								m.Cursor = i
+								break
+							}
+						}
+					}
+					if m.Cursor >= len(m.Files) && len(m.Files) > 0 {
+						m.Cursor = len(m.Files) - 1
+					}
+				} else {
+					m.Message = "⚠ No staged files to unstage"
+					m.MessageType = "warning"
+				}
 			case "c":
 				ok := false
 				for _, f := range m.Files {
@@ -680,6 +740,20 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 					m.Message = "⚠ No file selected or no files available"
 					m.MessageType = "warning"
 				}
+			case "d":
+				if len(m.Files) > 0 && m.Cursor < len(m.Files) {
+					file := m.Files[m.Cursor]
+					diff, err := git.GetFileDiff(file.Name, file.Staged)
+					if err != nil {
+						m.Message = fmt.Sprintf("✗ Error getting diff: %s", err)
+						m.MessageType = "error"
+					} else {
+						m.DiffLines = strings.Split(diff, "\n")
+						m.DiffViewOffset = 0
+						m.CurrentView = model.DiffView
+					}
+					return m, nil
+				}
 			case "?":
 				if m.CurrentView == model.FileView {
 					m.CurrentView = model.HelpView
@@ -753,6 +827,19 @@ func Update(m model.Model, cfg config.Config, msg tea.Msg) (model.Model, tea.Cmd
 		if msg.Err == nil {
 			m.HasRemoteChanges = msg.HasChanges
 		}
+
+	case messages.MessageClearMsg:
+		if msg.MessageID == m.MessageID {
+			m.Message = ""
+			m.MessageType = ""
+		}
+		return m, nil
+	}
+
+	// Auto-clear messages after 3 seconds
+	if m.Message != "" {
+		m.MessageID++
+		cmds = append(cmds, async.PerformMessageClear(m.MessageID))
 	}
 
 	if len(cmds) > 0 {

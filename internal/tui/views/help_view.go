@@ -14,12 +14,14 @@ func RenderHelpView() string {
 
 	lines := []string{
 		"[a] stage all",
+		"[u] unstage all",
 		"[b] branches",
 		"[m] remotes",
 		"[p] push",
 		"[f] fetch",
 		"[l] pull (only when remote changes)",
 		"[c] commit",
+		"[d] diff preview",
 		"[x] discard changes",
 		"[r] refresh",
 		"[A] advanced (logs, merge, stash, rebase)",

@@ -6,3 +6,7 @@ type SwitchBranchMsg struct {
 	NextAction   string
 	SourceBranch string
 }
+
+type MessageClearMsg struct {
+	MessageID int
+}

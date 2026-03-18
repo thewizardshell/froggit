@@ -107,28 +107,64 @@ func RenderFileView(m model.Model) string {
 			endIdx = totalFiles
 		}
 
-		for i := m.FileViewOffset; i < endIdx; i++ {
-			file := m.Files[i]
-			cursor := "  "
-			if m.Cursor == i {
-				cursor = ""
+		// Build ordered indices: staged first, then unstaged
+		var stagedIdx, unstagedIdx []int
+		for i := 0; i < totalFiles; i++ {
+			if m.Files[i].Staged {
+				stagedIdx = append(stagedIdx, i)
+			} else {
+				unstagedIdx = append(unstagedIdx, i)
+			}
+		}
+		orderedIdx := append(stagedIdx, unstagedIdx...)
+
+		renderedCount := 0
+		showedStagedHeader := false
+		showedUnstagedHeader := false
+
+		for _, idx := range orderedIdx {
+			file := m.Files[idx]
+
+			// Show group headers
+			if file.Staged && !showedStagedHeader && stagedCount > 0 {
+				showedStagedHeader = true
+				if renderedCount >= m.FileViewOffset && renderedCount < m.FileViewOffset+viewHeight {
+					s.WriteString(styles.SubHeaderStyle.Render("  ── Staged ──") + "\n")
+				}
+				renderedCount++
+			}
+			if !file.Staged && !showedUnstagedHeader && unstagedCount > 0 {
+				showedUnstagedHeader = true
+				if renderedCount >= m.FileViewOffset && renderedCount < m.FileViewOffset+viewHeight {
+					s.WriteString(styles.SubHeaderStyle.Render("  ── Unstaged ──") + "\n")
+				}
+				renderedCount++
 			}
 
-			staged := " "
-			if file.Staged {
-				staged = "✓"
+			if renderedCount >= m.FileViewOffset && renderedCount < m.FileViewOffset+viewHeight {
+				cursor := "  "
+				if m.Cursor == idx {
+					cursor = "▸ "
+				}
+
+				staged := " "
+				if file.Staged {
+					staged = "✓"
+				}
+
+				isSelected := m.Cursor == idx
+				style := getFileStatusStyle(file, isSelected)
+
+				icon := icons.GetIconForFile(file.Name)
+				statusIndicator := getFileStatusIndicator(file)
+				line := fmt.Sprintf("%s [%s] %s %s %s", cursor, staged, statusIndicator, icon, file.Name)
+				s.WriteString(style.Render(line) + "\n")
 			}
-
-			isSelected := m.Cursor == i
-			style := getFileStatusStyle(file, isSelected)
-
-			icon := icons.GetIconForFile(file.Name)
-			statusIndicator := getFileStatusIndicator(file)
-			line := fmt.Sprintf("%s [%s] %s %s %s", cursor, staged, statusIndicator, icon, file.Name)
-			s.WriteString(style.Render(line) + "\n")
+			renderedCount++
 		}
 
-		remaining := totalFiles - endIdx
+		// Count items below viewport
+		remaining := renderedCount - (m.FileViewOffset + viewHeight)
 		if remaining > 0 {
 			s.WriteString(styles.HelpStyle.Render(fmt.Sprintf("  ↓ %d more below\n", remaining)))
 		}

@@ -229,6 +229,28 @@ func HasCommitsToush() (bool, error) {
 	return NewGitClient("").HasCommitsToush()
 }
 
+func GetFileDiff(filename string, staged bool) (string, error) {
+	return NewGitClient("").GetFileDiff(filename, staged)
+}
+
+func (g *GitClient) GetFileDiff(filename string, staged bool) (string, error) {
+	var args []string
+	if staged {
+		args = []string{"diff", "--cached", "--", filename}
+	} else {
+		args = []string{"diff", "--", filename}
+	}
+	output, err := g.runGitCommand(args...)
+	if err != nil {
+		return "", fmt.Errorf("failed to get diff for %s: %w", filename, err)
+	}
+	result := strings.TrimSpace(string(output))
+	if result == "" {
+		return "No changes to display", nil
+	}
+	return result, nil
+}
+
 func GetStagedDiff() (string, error) {
 	return NewGitClient("").GetStagedDiff()
 }

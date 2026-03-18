@@ -27,6 +27,7 @@ const (
 	RebaseView
 	StashView
 	StashMessageView
+	DiffView
 )
 
 type Model struct {
@@ -75,12 +76,16 @@ type Model struct {
 	FileViewOffset int
 	FileViewHeight int
 
+	DiffLines      []string
+	DiffViewOffset int
+
 	IsGeneratingAI   bool
 	CopilotAvailable bool
 
 	DialogType   string
 	DialogTarget string
 
+	MessageID    int
 	AwaitingPush bool
 
 	QuickStartOptions []string

@@ -152,18 +152,23 @@ func NewFileViewControls(staged bool, hasFiles bool, advancedMode bool) *Control
 	if !advancedMode {
 		if hasFiles {
 			cs.Add("space", "stage/unstage", "files")
+			cs.Add("d", "diff", "files")
 			cs.Add("x", "discard changes", "files")
 		}
 		if staged {
 			cs.Add("c", "commit", "files")
 		}
 		cs.Add("a", "stage all", "files")
+		if staged {
+			cs.Add("u", "unstage all", "files")
+		}
 		cs.Add("r", "refresh", "files")
 		cs.Add("f", "fetch", "git")
 		cs.Add("l", "pull", "git")
 		cs.Add("p", "push", "git")
 		cs.Add("b", "branches", "nav")
 		cs.Add("m", "remotes", "nav")
+		cs.Add("A", "advanced", "mode")
 		cs.Add("?", "help", "general")
 	} else {
 		cs.Add("L", "log graph", "advanced")
@@ -313,6 +318,13 @@ func NewHelpViewControls() *ControlSet {
 	cs.Add("esc", "back", "navigation")
 	cs.Add("?", "close help", "navigation")
 	cs.Add("q", "quit", "general")
+	return cs
+}
+
+func NewDiffViewControls() *ControlSet {
+	cs := NewControlSet()
+	cs.Add("↑/↓", "scroll", "navigation")
+	cs.Add("esc", "back", "navigation")
 	return cs
 }
 
