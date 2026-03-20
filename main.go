@@ -11,12 +11,24 @@ import (
 	tui "froggit/internal/tui"
 	"froggit/internal/tui/model"
 	"froggit/internal/tui/update"
+	"froggit/internal/updater"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
+// VERSION is the semver used for update checks — injected at build time via ldflags.
+// PRERELEASE is appended for display only (e.g. "beta"). Set to "" for stable releases.
+var VERSION = "dev"
+var PRERELEASE = "beta"
+
+func displayVersion() string {
+	if PRERELEASE != "" {
+		return VERSION + "-" + PRERELEASE
+	}
+	return VERSION
+}
+
 const (
-	VERSION            = "1.3.0 - beta"
 	AUTHOR             = "Vicente Roa | Github: @thewizardshell"
 	REPO               = "https://github.com/thewizardshell/froggit"
 	SUPPORTED_COMMANDS = `
@@ -76,6 +88,7 @@ func main() {
 	helpFlag := flag.Bool("help", false, "Print help information")
 	commandsFlag := flag.Bool("commands", false, "List supported Git commands")
 	keyboardFlag := flag.Bool("keys", false, "List keyboard shortcuts")
+	updateFlag := flag.Bool("update", false, "Check for updates and update if available")
 	flag.Parse()
 
 	cfg, err := config.LoadConfig("froggit.yml")
@@ -87,7 +100,7 @@ func main() {
 	}
 
 	if *versionFlag {
-		fmt.Printf("Version: %s\nAuthor: %s\nRepository: %s\n", VERSION, AUTHOR, REPO)
+		fmt.Printf("Version: %s\nAuthor: %s\nRepository: %s\n", displayVersion(), AUTHOR, REPO)
 		os.Exit(0)
 	}
 
@@ -103,6 +116,11 @@ func main() {
 
 	if *keyboardFlag {
 		fmt.Print(KEYBOARD_SHORTCUTS)
+		os.Exit(0)
+	}
+
+	if *updateFlag {
+		updater.CheckAndUpdate(displayVersion())
 		os.Exit(0)
 	}
 

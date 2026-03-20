@@ -1,0 +1,83 @@
+name: Test Auto-Updater
+
+on:
+  workflow_dispatch:
+    inputs:
+      fake_version:
+        description: "Simulated old version (e.g. 0.0.1)"
+        required: false
+        default: "0.0.1"
+
+jobs:
+  test-updater:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            runner: ubuntu-latest
+            bin: ./froggit-test
+          - os: darwin
+            runner: macos-latest
+            bin: ./froggit-test
+          - os: windows
+            runner: windows-latest
+            bin: ./froggit-test.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.22
+
+      - name: Build with fake old version
+        shell: bash
+        run: |
+          go build \
+            -ldflags="-X main.VERSION=${{ github.event.inputs.fake_version }} -X main.PRERELEASE=beta" \
+            -o ${{ matrix.bin }} .
+
+      - name: "Check: initial version is the fake old one"
+        shell: bash
+        run: |
+          OUTPUT=$(${{ matrix.bin }} --version)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "${{ github.event.inputs.fake_version }}" \
+            && echo "PASS: version matches fake old version" \
+            || (echo "FAIL: expected ${{ github.event.inputs.fake_version }} in output" && exit 1)
+
+      - name: "Check: updater detects a newer release"
+        shell: bash
+        run: |
+          OUTPUT=$(echo "n" | ${{ matrix.bin }} --update 2>&1)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "New version available" \
+            && echo "PASS: newer version detected" \
+            || (echo "FAIL: expected 'New version available'" && exit 1)
+
+      - name: "Apply: download and replace binary"
+        shell: bash
+        run: |
+          echo "y" | ${{ matrix.bin }} --update
+
+      - name: "Check: binary was replaced with newer version"
+        shell: bash
+        run: |
+          OUTPUT=$(${{ matrix.bin }} --version)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -qv "${{ github.event.inputs.fake_version }}" \
+            && echo "PASS: version changed after update" \
+            || (echo "FAIL: version still shows fake old version after update" && exit 1)
+
+      - name: "Check: running update again says already latest"
+        shell: bash
+        run: |
+          OUTPUT=$(${{ matrix.bin }} --update 2>&1)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep -q "already on the latest version" \
+            && echo "PASS: no spurious update after being current" \
+            || (echo "FAIL: expected 'already on the latest version'" && exit 1)
